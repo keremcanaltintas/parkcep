@@ -17,8 +17,6 @@ import {
   Clock,
   Menu,
   X,
-  Smartphone,
-  Monitor,
   Zap,
   LogIn
 } from 'lucide-react';
@@ -35,9 +33,7 @@ export default function Navbar({ onOpenTimeModal }: Props) {
     users,
     switchUserById,
     currentDemoTime,
-    clockOffsetSeconds,
-    mobileFrameMode,
-    toggleMobileFrameMode
+    clockOffsetSeconds
   } = useStore();
 
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
