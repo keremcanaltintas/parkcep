@@ -29,10 +29,18 @@ export default function InteractiveMap({
 
     async function initLeaflet() {
       if (typeof window === 'undefined' || !mapContainerRef.current) return;
-      if (leafletMapRef.current) return; // Zaten başlatıldı
+      if (leafletMapRef.current) return;
 
       try {
         const L = (await import('leaflet')).default;
+
+        if (!isMounted || !mapContainerRef.current) return;
+        if (leafletMapRef.current) return;
+
+        // React Strict Mode / Fast Refresh'te çift render koruması
+        if ((mapContainerRef.current as any)._leaflet_id) {
+          (mapContainerRef.current as any)._leaflet_id = null;
+        }
 
         // Leaflet default icon fix
         delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -54,10 +62,10 @@ export default function InteractiveMap({
           scrollWheelZoom: false, // Sayfa kaydırmasını engellememek için
         });
 
-        // OpenStreetMap CartoDB Voyager Tile Katmanı (Ultra-temiz, modern akıllı şehir teması)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-          subdomains: 'abcd',
+        // Resmi OpenStreetMap Tile Katmanı (100% Ücretsiz, API Anahtarı Gerekmez, Filigransız)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          subdomains: ['a', 'b', 'c'],
           maxZoom: 19
         }).addTo(map);
 
@@ -73,8 +81,15 @@ export default function InteractiveMap({
     return () => {
       isMounted = false;
       if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
+        try {
+          leafletMapRef.current.remove();
+        } catch (e) {}
         leafletMapRef.current = null;
+      }
+      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id) {
+        try {
+          (mapContainerRef.current as any)._leaflet_id = null;
+        } catch (e) {}
       }
     };
   }, []);
@@ -97,14 +112,21 @@ export default function InteractiveMap({
 
         // Özel HTML DivIcon
         const customHtml = `
-          <div class="group cursor-pointer select-none" style="transform: translate(-50%, -100%);">
+          <div style="
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-50%, -100%);
+            cursor: pointer;
+            user-select: none;
+          ">
             <div style="
               background: ${isSelected ? '#0F172A' : '#FFFFFF'};
               color: ${isSelected ? '#FFFFFF' : '#0F172A'};
               border: 2px solid ${isSelected ? '#14B8A6' : '#CBD5E1'};
-              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-              border-radius: 14px;
-              padding: 5px 9px;
+              box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+              border-radius: 9999px;
+              padding: 6px 12px;
               font-family: inherit;
               display: flex;
               align-items: center;
@@ -112,11 +134,10 @@ export default function InteractiveMap({
               white-space: nowrap;
               font-size: 11px;
               font-weight: 700;
-              transition: all 0.2s ease;
             ">
               <span style="
-                width: 7px;
-                height: 7px;
+                width: 8px;
+                height: 8px;
                 border-radius: 9999px;
                 background: ${bosYer > 0 ? '#10B981' : '#EF4444'};
                 display: inline-block;
@@ -125,9 +146,10 @@ export default function InteractiveMap({
               <span style="
                 background: ${isSelected ? '#14B8A6' : '#F1F5F9'};
                 color: ${isSelected ? '#0F172A' : '#0D9488'};
-                padding: 1px 5px;
+                padding: 1px 6px;
                 border-radius: 6px;
                 font-size: 10px;
+                font-weight: 800;
               ">${priceStr}/sa</span>
               <span style="
                 color: ${bosYer > 0 ? (isSelected ? '#6EE7B7' : '#059669') : '#DC2626'};
@@ -138,8 +160,7 @@ export default function InteractiveMap({
               height: 0;
               border-left: 6px solid transparent;
               border-right: 6px solid transparent;
-              border-top: 7px solid ${isSelected ? '#14B8A6' : '#FFFFFF'};
-              margin: 0 auto;
+              border-top: 7px solid ${isSelected ? '#14B8A6' : '#CBD5E1'};
             "></div>
           </div>
         `;
