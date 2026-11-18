@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
@@ -20,7 +20,7 @@ import {
   Navigation
 } from 'lucide-react';
 
-export default function OtoparkDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function OtoparkDetailInner({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const { lots, spaces, chargers, reservations, lotSummaries, currentDemoTime } = useStore();
@@ -271,5 +271,19 @@ export default function OtoparkDetailPage({ params }: { params: Promise<{ id: st
         </div>
       )}
     </div>
+  );
+}
+
+export default function OtoparkDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center text-xs text-slate-500">
+          Otopark bilgileri yükleniyor...
+        </div>
+      }
+    >
+      <OtoparkDetailInner params={params} />
+    </Suspense>
   );
 }

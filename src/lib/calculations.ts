@@ -1,10 +1,14 @@
 import { Reservation, Space, ParkingLot, LotOccupancySummary, SpaceType } from '@/types';
 
+export const STATIC_BASE_TIMESTAMP = 1795003200000; // 2026-11-18T12:00:00.000Z
+
 /**
- * Demo zamanına göre güncel Date objesi döndürür
+ * Demo zamanına göre güncel Date objesi döndürür.
+ * Next.js 16 Client Component prerender aşamasında kararsız Date.now() çağrısını önler.
  */
-export function getDemoDate(offsetSeconds: number): Date {
-  return new Date(Date.now() + offsetSeconds * 1000);
+export function getDemoDate(offsetSeconds: number, baseTimestamp?: number): Date {
+  const base = typeof baseTimestamp === 'number' ? baseTimestamp : STATIC_BASE_TIMESTAMP;
+  return new Date(base + offsetSeconds * 1000);
 }
 
 /**

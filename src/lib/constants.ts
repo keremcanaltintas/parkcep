@@ -155,10 +155,12 @@ export const DEMO_USERS: User[] = [
   }
 ];
 
+export const STATIC_SEED_TIMESTAMP = 1795003200000; // 2026-11-18T12:00:00.000Z
+
 // Başlangıç Rezervasyonları ve Ziyaretleri üreten yardımcı fonksiyon
 // Demo saatine göre dinamik olarak tarih üretir:
 // 3 İÇERİDE araç, 4 gelecek ONAYLI rezervasyon, son 7 güne yayılmış 12 TAMAMLANDI ziyaret
-export function createInitialReservations(baseTime: Date = new Date()): Reservation[] {
+export function createInitialReservations(baseTime: Date = new Date(STATIC_SEED_TIMESTAMP)): Reservation[] {
   const now = baseTime.getTime();
   const ONE_HOUR = 3600 * 1000;
   const ONE_DAY = 24 * ONE_HOUR;
@@ -469,8 +471,8 @@ export const INITIAL_CHARGE_SESSIONS: ChargeSession[] = [
     id: 'cs-demo-1',
     reservation_id: 'res-comp-4',
     charger_id: 'ch-merkez-1',
-    baslangic: new Date(Date.now() - 2 * 24 * 3600 * 1000 - 3600 * 1000).toISOString(),
-    bitis: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+    baslangic: '2026-11-16T10:00:00.000Z',
+    bitis: '2026-11-16T11:00:00.000Z',
     enerji_kWh: 18.40,
     birim_fiyat_kurus: 1000,
     aktif_mi: false
@@ -484,7 +486,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
     rol: 'demo_yoneticisi',
     islem: 'SISTEM_BASLATILDI',
     nesne: '3 Tesis / 30 Park Yeri',
-    zaman: new Date().toISOString(),
+    zaman: '2026-11-18T12:00:00.000Z',
     detay: 'Başlangıç verileri başarıyla yüklendi (30 toplam yer, 3 içeride, 1 kapalı, 26 fiziksel boş).'
   }
 ];

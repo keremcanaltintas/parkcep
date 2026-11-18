@@ -24,6 +24,7 @@ import {
 } from './constants';
 import {
   getDemoDate,
+  STATIC_BASE_TIMESTAMP,
   calculateLotOccupancy,
   findAvailableSpace,
   validateCheckInTime,
@@ -107,24 +108,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [lots, setLots] = useState<ParkingLot[]>(INITIAL_PARKING_LOTS);
   const [spaces, setSpaces] = useState<Space[]>(INITIAL_SPACES);
   const [chargers, setChargers] = useState<Charger[]>(INITIAL_CHARGERS);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>(() =>
+    createInitialReservations(new Date(STATIC_BASE_TIMESTAMP))
+  );
   const [chargeSessions, setChargeSessions] = useState<ChargeSession[]>(INITIAL_CHARGE_SESSIONS);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [clockOffsetSeconds, setClockOffsetSeconds] = useState<number>(0);
   const [mobileFrameMode, setMobileFrameMode] = useState<boolean>(false);
 
-  // Güncel demo saati (her saniye veya offset değiştikçe tetiklenir)
-  const [ticker, setTicker] = useState<number>(0);
+  // Client mount olana kadar prerender ve ilk SSR render'da sabit zaman kullanılır
+  const [clientNow, setClientNow] = useState<number | null>(null);
+
   useEffect(() => {
+    // Sadece client tarafında mount olduktan sonra Date.now() çalışır (prerender'da asla tetiklenmez)
+    setClientNow(Date.now());
     const timer = setInterval(() => {
-      setTicker(t => t + 1);
+      setClientNow(Date.now());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
   const currentDemoTime = useMemo(() => {
-    return getDemoDate(clockOffsetSeconds);
-  }, [clockOffsetSeconds, ticker]);
+    return getDemoDate(clockOffsetSeconds, clientNow ?? STATIC_BASE_TIMESTAMP);
+  }, [clockOffsetSeconds, clientNow]);
 
   // Sayfa ilk açılışında LocalStorage'dan yükleme
   useEffect(() => {
