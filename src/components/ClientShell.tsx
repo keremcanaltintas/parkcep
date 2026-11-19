@@ -18,7 +18,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
       </Suspense>
 
       {/* 100% Doğal Responsive Gövde (Telefondan 1440px+ geniş ekrana kadar duyarlı) */}
-      <main className="flex-1 pb-20 sm:pb-12">
+      <main className="flex-1 pb-28 sm:pb-12">
         <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Yükleniyor...</div>}>
           {children}
         </Suspense>

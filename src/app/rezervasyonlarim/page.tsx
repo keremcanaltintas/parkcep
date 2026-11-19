@@ -11,6 +11,7 @@ import {
   getExitOverdueMinutes
 } from '@/lib/calculations';
 import QRCodeCard from '@/components/QRCodeCard';
+import RoleGuard from '@/components/RoleGuard';
 import {
   CalendarCheck,
   QrCode,
@@ -27,6 +28,14 @@ import {
 } from 'lucide-react';
 
 export default function RezervasyonlarimPage() {
+  return (
+    <RoleGuard allowedRoles={['surucu', 'demo_yoneticisi']}>
+      <RezervasyonlarimContent />
+    </RoleGuard>
+  );
+}
+
+function RezervasyonlarimContent() {
   const { reservations, lots, cancelReservation, currentUser, currentDemoTime } = useStore();
   const [selectedQRReservation, setSelectedQRReservation] = useState<Reservation | null>(null);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);

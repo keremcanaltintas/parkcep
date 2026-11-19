@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ParkingLot, LotOccupancySummary } from '@/types';
 import { formatKurusToTL } from '@/lib/calculations';
-import { MapPin, Navigation, ExternalLink, Zap, Layers, RefreshCw } from 'lucide-react';
+import { Navigation, ExternalLink } from 'lucide-react';
 
 interface Props {
   lots: ParkingLot[];
@@ -20,26 +19,33 @@ export default function InteractiveMap({
   onSelectLot
 }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const leafletMapRef = useRef<any>(null);
+  const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({});
-  const [isMapReady, setIsMapReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [mountKey, setMountKey] = useState(0);
+  const initInProgress = useRef(false);
 
+  // Haritayı başlat — tek sefer çalışır
   useEffect(() => {
-    let isMounted = true;
+    if (typeof window === 'undefined') return;
+    if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
+    if (initInProgress.current) return;
 
-    async function initLeaflet() {
-      if (typeof window === 'undefined' || !mapContainerRef.current) return;
-      if (leafletMapRef.current) return;
+    initInProgress.current = true;
+    let cancelled = false;
 
+    (async () => {
       try {
         const L = (await import('leaflet')).default;
 
-        if (!isMounted || !mapContainerRef.current) return;
-        if (leafletMapRef.current) return;
+        if (cancelled || !mapContainerRef.current) return;
 
-        // React Strict Mode / Fast Refresh'te çift render koruması
+        // Eğer container zaten Leaflet tarafından alınmışsa, yeni key ile remount et
         if ((mapContainerRef.current as any)._leaflet_id) {
-          (mapContainerRef.current as any)._leaflet_id = null;
+          initInProgress.current = false;
+          if (!cancelled) setMountKey(k => k + 1);
+          return;
         }
 
         // Leaflet default icon fix
@@ -50,58 +56,54 @@ export default function InteractiveMap({
           shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         });
 
-        // İstanbul Boğazı Merkezli Koordinat (Beşiktaş, Üsküdar ve Kadıköy'ü kapsar)
-        const centerLat = 41.0150;
-        const centerLng = 29.0150;
-
         const map = L.map(mapContainerRef.current, {
-          center: [centerLat, centerLng],
+          center: [41.0150, 29.0150],
           zoom: 12,
           zoomControl: true,
           attributionControl: true,
-          scrollWheelZoom: false, // Sayfa kaydırmasını engellememek için
+          scrollWheelZoom: false,
         });
 
-        // Resmi OpenStreetMap Tile Katmanı (100% Ücretsiz, API Anahtarı Gerekmez, Filigransız)
+        // OpenStreetMap tiles — ücretsiz, API anahtarı gerekmez
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           subdomains: ['a', 'b', 'c'],
           maxZoom: 19
         }).addTo(map);
 
-        leafletMapRef.current = map;
-        if (isMounted) setIsMapReady(true);
+        mapInstanceRef.current = map;
+        initInProgress.current = false;
+        if (!cancelled) setIsReady(true);
       } catch (err) {
-        console.error('Leaflet OpenStreetMap başlatma hatası:', err);
+        console.error('Leaflet başlatma hatası:', err);
+        initInProgress.current = false;
       }
-    }
-
-    initLeaflet();
+    })();
 
     return () => {
-      isMounted = false;
-      if (leafletMapRef.current) {
+      cancelled = true;
+      if (mapInstanceRef.current) {
         try {
-          leafletMapRef.current.remove();
-        } catch (e) {}
-        leafletMapRef.current = null;
+          mapInstanceRef.current.remove();
+        } catch (_) { /* ignore */ }
+        mapInstanceRef.current = null;
       }
-      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id) {
-        try {
-          (mapContainerRef.current as any)._leaflet_id = null;
-        } catch (e) {}
-      }
+      markersRef.current = {};
+      setIsReady(false);
+      initInProgress.current = false;
     };
-  }, []);
+  }, [mountKey]);
 
-  // Marker'ları güncelleme
+  // Marker'ları güncelle
   useEffect(() => {
-    const map = leafletMapRef.current;
-    if (!map || !isMapReady) return;
+    const map = mapInstanceRef.current;
+    if (!map || !isReady) return;
 
     import('leaflet').then(({ default: L }) => {
       // Eski marker'ları temizle
-      Object.values(markersRef.current).forEach((m: any) => m.remove());
+      Object.values(markersRef.current).forEach((m: any) => {
+        try { m.remove(); } catch (_) { /* */ }
+      });
       markersRef.current = {};
 
       lots.forEach((lot) => {
@@ -110,7 +112,6 @@ export default function InteractiveMap({
         const isSelected = selectedLotId === lot.id;
         const priceStr = formatKurusToTL(lot.saatlik_ucret_kurus);
 
-        // Özel HTML DivIcon
         const customHtml = `
           <div style="
             display: inline-flex;
@@ -174,13 +175,11 @@ export default function InteractiveMap({
 
         const marker = L.marker([lot.lat, lot.lng], { icon }).addTo(map);
 
-        // Marker tıklama
         marker.on('click', () => {
           onSelectLot(lot.id);
           map.flyTo([lot.lat, lot.lng], 14, { duration: 0.8 });
         });
 
-        // Popup içeriği
         const popupContent = `
           <div style="font-family: inherit; padding: 4px; min-width: 180px;">
             <div style="font-size: 13px; font-weight: 800; color: #0F172A;">${lot.ad}</div>
@@ -219,22 +218,22 @@ export default function InteractiveMap({
         markersRef.current[lot.id] = marker;
       });
     });
-  }, [lots, summaries, selectedLotId, isMapReady, onSelectLot]);
+  }, [lots, summaries, selectedLotId, isReady, onSelectLot]);
 
-  // Seçilen otopark değişince haritayı oraya odakla
+  // Seçilen otoparka odaklan
   useEffect(() => {
-    if (!selectedLotId || !leafletMapRef.current || !markersRef.current[selectedLotId]) return;
+    if (!selectedLotId || !mapInstanceRef.current || !markersRef.current[selectedLotId]) return;
     const lot = lots.find(l => l.id === selectedLotId);
     if (lot) {
-      leafletMapRef.current.flyTo([lot.lat, lot.lng], 14, { duration: 0.8 });
+      mapInstanceRef.current.flyTo([lot.lat, lot.lng], 14, { duration: 0.8 });
       markersRef.current[selectedLotId].openPopup();
     }
   }, [selectedLotId, lots]);
 
   return (
     <div className="relative w-full h-[400px] sm:h-[480px] lg:h-[560px] rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm bg-slate-100 flex flex-col">
-      {/* Harita Konteyneri */}
-      <div ref={mapContainerRef} className="w-full h-full z-10" />
+      {/* Harita Konteyneri — mountKey değişince DOM node yeniden oluşur */}
+      <div key={mountKey} ref={mapContainerRef} className="w-full h-full z-10" />
 
       {/* Üst Bilgi Rozeti */}
       <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-2 text-xs font-semibold text-slate-800">
@@ -242,7 +241,7 @@ export default function InteractiveMap({
         <span>OpenStreetMap • Canlı İstasyon Konumları</span>
       </div>
 
-      {/* Harita Dış Bağlantı ve Hızlı Butonlar */}
+      {/* Alt Bilgi */}
       <div className="absolute bottom-3 left-3 right-3 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-200 shadow-md flex items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2 text-slate-700">
           <Navigation className="w-3.5 h-3.5 text-teal-600 shrink-0" />
@@ -268,8 +267,8 @@ export default function InteractiveMap({
           )}
           <button
             onClick={() => {
-              if (leafletMapRef.current) {
-                leafletMapRef.current.flyTo([41.0150, 29.0150], 12);
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.flyTo([41.0150, 29.0150], 12);
               }
             }}
             className="text-[11px] text-slate-600 hover:text-slate-900 font-semibold px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"

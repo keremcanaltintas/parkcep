@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/lib/store';
@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'ParkCep • Rezervasyonlu Otopark ve Şarj Sistemi Demo',
   description: 'Akıllı şehir kapsamında otopark doluluğu, rezervasyon ve şarj yönetimi Türkçe web uygulaması demosu.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#0F172A',
 };
 
 export default function RootLayout({
