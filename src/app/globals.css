@@ -6,11 +6,37 @@
   --foreground: #0F172A;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
+  width: 100%;
+  min-width: 320px;
+}
+
+/* Mobil dokunmatik iyileştirmesi */
+button, a, input, select {
+  touch-action: manipulation;
+}
+
+/* Yatay taşmaları önleyici genel kurallar */
+* {
+  box-sizing: border-box;
+}
+
+/* Scrollbar gizleme yardımcı sınıfı */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Leaflet harita özel ayarları */

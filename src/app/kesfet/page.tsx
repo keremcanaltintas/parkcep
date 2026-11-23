@@ -13,20 +13,14 @@ import {
 import InteractiveMap from '@/components/InteractiveMap';
 import {
   Search,
-  SlidersHorizontal,
-  Calendar,
   Clock,
   Zap,
   Accessibility,
   Car,
   ChevronRight,
-  MapPin,
-  ExternalLink,
   List,
   Map,
-  RotateCcw,
-  Sparkles,
-  Info
+  RotateCcw
 } from 'lucide-react';
 
 export default function KesfetPage() {
@@ -73,7 +67,6 @@ export default function KesfetPage() {
   const filteredLots = useMemo(() => {
     return lots
       .filter((lot) => {
-        // Arama (İsim veya Bölge)
         if (searchTerm.trim() !== '') {
           const term = searchTerm.toLowerCase();
           const matchName = lot.ad.toLowerCase().includes(term);
@@ -81,7 +74,6 @@ export default function KesfetPage() {
           if (!matchName && !matchRegion) return false;
         }
 
-        // Park Türü Filtresi
         if (selectedType !== 'hepsi') {
           const hasType = spaces.some(
             s => s.lot_id === lot.id && s.tur === selectedType && !s.kapali_mi
@@ -89,7 +81,6 @@ export default function KesfetPage() {
           if (!hasType) return false;
         }
 
-        // Şarj Soketi ve Asgari Güç Filtresi
         if (selectedType === 'sarjli' || selectedSocket !== 'hepsi' || minPowerKw > 0) {
           const lotSpaces = spaces.filter(s => s.lot_id === lot.id && s.tur === 'sarjli');
           const lotSpaceIds = new Set(lotSpaces.map(s => s.id));
@@ -109,7 +100,6 @@ export default function KesfetPage() {
         return true;
       })
       .sort((a, b) => {
-        // Varsayılan sıralama: Seçilen süre için park bedelidir (Page 3)
         if (sortOption === 'ucret') {
           const priceA = calculateParkingPriceKurus(calculatedStart, calculatedEnd, a.saatlik_ucret_kurus).totalKurus;
           const priceB = calculateParkingPriceKurus(calculatedStart, calculatedEnd, b.saatlik_ucret_kurus).totalKurus;
@@ -137,15 +127,15 @@ export default function KesfetPage() {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4">
       {/* Üst Başlık & Süre Barı */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
               Otopark ve Şarj Noktaları Keşfet
             </h1>
-            <span className="hidden sm:inline-flex text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
+            <span className="hidden sm:inline-flex text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shrink-0">
               Pilot Bölge
             </span>
           </div>
@@ -154,16 +144,16 @@ export default function KesfetPage() {
           </p>
         </div>
 
-        {/* Zaman Aralığı Seçimi (Page 3: "Varış / çıkış seçimi, 15 dk adımlarla") */}
+        {/* Zaman Aralığı Seçimi */}
         <div className="flex items-center gap-2 flex-wrap text-xs bg-slate-50 p-2 rounded-xl border border-slate-200/90">
           <Clock className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 font-medium">Başlangıç:</span>
+          <div className="flex items-center gap-1.5 flex-1 min-w-[140px]">
+            <span className="text-slate-500 font-medium text-[11px]">Giriş:</span>
             <select
               value={startOffsetMinutes}
               onChange={(e) => setStartOffsetMinutes(Number(e.target.value))}
               aria-label="Rezervasyon başlangıç zamanı"
-              className="bg-white border border-slate-300 rounded-lg px-2 py-1 font-semibold text-slate-800 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 font-semibold text-slate-800 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden min-h-[34px]"
             >
               <option value={0}>Şimdi ({formatIstanbulTime(currentDemoTime)})</option>
               <option value={15}>+15 dk sonra</option>
@@ -174,15 +164,13 @@ export default function KesfetPage() {
             </select>
           </div>
 
-          <span className="text-slate-300">|</span>
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 font-medium">Süre:</span>
+          <div className="flex items-center gap-1.5 flex-1 min-w-[120px]">
+            <span className="text-slate-500 font-medium text-[11px]">Süre:</span>
             <select
               value={durationMinutes}
               onChange={(e) => setDurationMinutes(Number(e.target.value))}
               aria-label="Rezervasyon süresi"
-              className="bg-white border border-slate-300 rounded-lg px-2 py-1 font-semibold text-slate-800 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 font-semibold text-slate-800 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden min-h-[34px]"
             >
               <option value={30}>30 Dakika</option>
               <option value={60}>1 Saat</option>
@@ -196,28 +184,28 @@ export default function KesfetPage() {
       </div>
 
       {/* ARAMA VE FİLTRE ÇUBUĞU */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
           {/* Arama Input */}
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 shrink-0" />
             <input
               type="text"
-              placeholder="Otopark adı veya örnek bölge ara (örn: Kadıköy, Beşiktaş, Üsküdar)..."
+              placeholder="Otopark veya bölge ara (Kadıköy, Beşiktaş, Üsküdar)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-50/50"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-50/50 min-h-[40px]"
             />
           </div>
 
           {/* Sıralama */}
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-            <span className="text-xs text-slate-500 font-medium">Sırala:</span>
+            <span className="text-xs text-slate-500 font-medium shrink-0">Sırala:</span>
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value as any)}
               aria-label="Sonuçları sıralama ölçütü"
-              className="flex-1 sm:flex-initial bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              className="flex-1 sm:flex-initial bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden min-h-[40px]"
             >
               <option value="ucret">Park Bedeli (En Uygun)</option>
               <option value="bosYer">Fiziksel Boş Yer Sayısı</option>
@@ -226,94 +214,91 @@ export default function KesfetPage() {
           </div>
         </div>
 
-        {/* Filtre Butonları (Standart / Erişilebilir / Şarjlı) */}
-        <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-slate-500 mr-1">Park Türü:</span>
+        {/* Filtre Butonları */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-2 border-t border-slate-100">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 mr-1 shrink-0">Tür:</span>
 
-            <button
-              onClick={() => setSelectedType('hepsi')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                selectedType === 'hepsi'
-                  ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Tüm Türler
-            </button>
+          <button
+            onClick={() => setSelectedType('hepsi')}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium transition-all min-h-[34px] ${
+              selectedType === 'hepsi'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            Tümü
+          </button>
 
-            <button
-              onClick={() => setSelectedType('standart')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                selectedType === 'standart'
-                  ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <Car className="w-3.5 h-3.5" />
-              <span>Standart Park</span>
-            </button>
+          <button
+            onClick={() => setSelectedType('standart')}
+            className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium transition-all min-h-[34px] ${
+              selectedType === 'standart'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <Car className="w-3.5 h-3.5 shrink-0" />
+            <span>Standart</span>
+          </button>
 
-            <button
-              onClick={() => setSelectedType('erisilebilir')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                selectedType === 'erisilebilir'
-                  ? 'bg-blue-700 text-white font-semibold shadow-xs'
-                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-              }`}
-            >
-              <Accessibility className="w-3.5 h-3.5" />
-              <span>Erişilebilir Park</span>
-            </button>
+          <button
+            onClick={() => setSelectedType('erisilebilir')}
+            className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium transition-all min-h-[34px] ${
+              selectedType === 'erisilebilir'
+                ? 'bg-blue-700 text-white font-semibold shadow-xs'
+                : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+            }`}
+          >
+            <Accessibility className="w-3.5 h-3.5 shrink-0" />
+            <span>Erişilebilir</span>
+          </button>
 
-            <button
-              onClick={() => setSelectedType('sarjli')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                selectedType === 'sarjli'
-                  ? 'bg-teal-600 text-white font-semibold shadow-xs'
-                  : 'bg-teal-50 text-teal-800 hover:bg-teal-100'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Şarjlı Park (EV)</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setSelectedType('sarjli')}
+            className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium transition-all min-h-[34px] ${
+              selectedType === 'sarjli'
+                ? 'bg-teal-600 text-white font-semibold shadow-xs'
+                : 'bg-teal-50 text-teal-800 hover:bg-teal-100'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 shrink-0" />
+            <span>Şarjlı (EV)</span>
+          </button>
 
-          {/* Şarjlı Park Detay Filtreleri (Soket & Güç) */}
+          {/* Şarjlı Park Detay Filtreleri */}
           {(selectedType === 'sarjli' || selectedSocket !== 'hepsi' || minPowerKw > 0) && (
-            <div className="flex items-center gap-2 flex-wrap pl-2 border-l border-slate-200">
-              <span className="text-xs font-semibold text-teal-800">Soket:</span>
+            <div className="flex items-center gap-1.5 flex-wrap pl-2 border-l border-slate-200 my-0.5">
               <button
                 onClick={() => setSelectedSocket(selectedSocket === 'CCS2' ? 'hepsi' : 'CCS2')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all min-h-[30px] ${
                   selectedSocket === 'CCS2'
                     ? 'bg-teal-700 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                ⚡ CCS2 (DC)
+                ⚡ CCS2
               </button>
 
               <button
                 onClick={() => setSelectedSocket(selectedSocket === 'Type 2' ? 'hepsi' : 'Type 2')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all min-h-[30px] ${
                   selectedSocket === 'Type 2'
                     ? 'bg-teal-700 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                🔌 Type 2 (AC)
+                🔌 Type 2
               </button>
 
               <select
                 value={minPowerKw}
                 onChange={(e) => setMinPowerKw(Number(e.target.value))}
                 aria-label="Asgari şarj gücü"
-                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700"
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 min-h-[30px]"
               >
                 <option value={0}>Tüm Güçler</option>
-                <option value={50}>≥ 50 kW (Hızlı)</option>
-                <option value={100}>≥ 100 kW (Ultra Hızlı)</option>
+                <option value={50}>≥ 50 kW</option>
+                <option value={100}>≥ 100 kW</option>
               </select>
             </div>
           )}
@@ -321,67 +306,67 @@ export default function KesfetPage() {
           {isFiltered && (
             <button
               onClick={resetFilters}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs text-rose-600 hover:bg-rose-50 font-medium ml-auto transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs text-rose-600 hover:bg-rose-50 font-medium ml-auto transition-colors min-h-[34px]"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="w-3 h-3 shrink-0" />
               <span>Filtreleri Temizle</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* MOBİL GÖRÜNÜM SEKME GEÇİŞİ (Page 3: "Telefonda harita/liste geçişi") */}
+      {/* MOBİL GÖRÜNÜM SEKME GEÇİŞİ (Telefonda Liste / Harita) */}
       <div className="flex md:hidden bg-slate-200 p-1 rounded-xl">
         <button
           onClick={() => setMobileTab('liste')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all min-h-[40px] ${
             mobileTab === 'liste'
               ? 'bg-white text-slate-900 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <List className="w-4 h-4" />
-          <span>Liste Görünümü ({filteredLots.length})</span>
+          <List className="w-4 h-4 shrink-0" />
+          <span>Liste ({filteredLots.length})</span>
         </button>
 
         <button
           onClick={() => setMobileTab('harita')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all min-h-[40px] ${
             mobileTab === 'harita'
               ? 'bg-white text-slate-900 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Map className="w-4 h-4" />
+          <Map className="w-4 h-4 shrink-0" />
           <span>Harita Görünümü</span>
         </button>
       </div>
 
-      {/* ANA İKİ SÜTUNLU YAPI (Masaüstünde Sol Liste, Sağ Harita) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+      {/* ANA İKİ SÜTUNLU YAPI */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5 items-start">
         {/* SOL: OTOPARK LİSTESİ */}
-        <div className={`md:col-span-6 lg:col-span-5 space-y-4 ${mobileTab === 'harita' ? 'hidden md:block' : 'block'}`}>
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <div className={`md:col-span-6 lg:col-span-5 space-y-3.5 sm:space-y-4 ${mobileTab === 'harita' ? 'hidden md:block' : 'block'}`}>
+          <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+            <span className="font-bold uppercase tracking-wider">
               Bulunan Tesisler ({filteredLots.length})
             </span>
-            <span className="text-xs text-slate-500">
-              Süre: <strong>{durationMinutes / 60} Saat</strong> için hesaplandı
+            <span>
+              {durationMinutes / 60} Saat İçin
             </span>
           </div>
 
           {filteredLots.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="text-sm font-bold text-slate-800">Seçilen Kriterlere Uygun Otopark Bulunamadı</h3>
+              <h3 className="text-sm font-bold text-slate-800">Kriterlere Uygun Otopark Bulunamadı</h3>
               <p className="text-xs text-slate-500 max-w-xs mx-auto">
                 Arama teriminizi veya filtrelerinizi değiştirerek tekrar deneyebilirsiniz.
               </p>
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-500 text-slate-950 text-xs font-bold hover:bg-teal-400 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-500 text-slate-950 text-xs font-bold hover:bg-teal-400 transition-colors min-h-[40px]"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Filtreleri Temizle</span>
@@ -392,7 +377,6 @@ export default function KesfetPage() {
               const summary = lotSummaries[lot.id];
               const isSelected = selectedLotId === lot.id;
 
-              // Seçilen aralık için ayrılabilir kapasite hesabı (Page 2 & 3)
               const ayrilabilirKapasite = getAvailableCapacityForRange(
                 lot.id,
                 selectedType === 'hepsi' ? 'hepsi' : selectedType,
@@ -403,7 +387,6 @@ export default function KesfetPage() {
                 currentDemoTime
               );
 
-              // Seçilen süre için planlanan park ücreti
               const priceInfo = calculateParkingPriceKurus(
                 calculatedStart,
                 calculatedEnd,
@@ -421,21 +404,21 @@ export default function KesfetPage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-semibold text-teal-700 uppercase tracking-wide">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-teal-700 uppercase tracking-wide truncate">
                           {lot.ornek_bolge}
                         </span>
                         {lot.toplu_tasima_etiketi && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700">
+                          <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 shrink-0">
                             Toplu Taşıma
                           </span>
                         )}
                       </div>
-                      <h3 className="font-extrabold text-base text-slate-900 mt-0.5">
+                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 mt-0.5 truncate">
                         {lot.ad}
                       </h3>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
+                      <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-slate-500 mt-1 flex-wrap">
                         <span>Çalışma: <strong>{lot.calisma_saatleri}</strong></span>
                         <span>•</span>
                         <span>{lot.veri_zamani}</span>
@@ -444,24 +427,24 @@ export default function KesfetPage() {
 
                     {/* Fiyat Rozeti */}
                     <div className="text-right shrink-0">
-                      <div className="text-base sm:text-lg font-black text-slate-900">
+                      <div className="text-sm sm:text-lg font-black text-slate-900">
                         {formatKurusToTL(priceInfo.totalKurus)}
                       </div>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[9px] sm:text-[10px] text-slate-500">
                         {priceInfo.hoursCharged} sa × {formatKurusToTL(lot.saatlik_ucret_kurus)}
                       </div>
                     </div>
                   </div>
 
-                  {/* Anlık Fiziksel Boşluk ve Ayrılabilir Kapasite (Page 2 & 3: Ayrı Gösterilir!) */}
-                  <div className="mt-4 grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  {/* Anlık Boşluk ve Ayrılabilir Kapasite */}
+                  <div className="mt-3.5 grid grid-cols-1 xs:grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
                     <div>
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+                      <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
                         Şu Anki Fiziksel Boşluk
                       </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span
-                          className={`w-2 h-2 rounded-full ${
+                          className={`w-2 h-2 rounded-full shrink-0 ${
                             (summary?.fiziksel_bos_yer || 0) > 0 ? 'bg-emerald-500' : 'bg-rose-500'
                           }`}
                         />
@@ -470,17 +453,17 @@ export default function KesfetPage() {
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-400">
-                        (Toplam {summary?.toplam_yer} / {summary?.kapali_yer} kapalı)
+                        ({summary?.toplam_yer} toplam / {summary?.kapali_yer} kapalı)
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[10px] font-semibold text-teal-800 uppercase tracking-wider block">
+                      <span className="text-[9px] sm:text-[10px] font-semibold text-teal-800 uppercase tracking-wider block">
                         Seçilen Zaman İçin Ayrılabilir
                       </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span
-                          className={`w-2 h-2 rounded-full ${
+                          className={`w-2 h-2 rounded-full shrink-0 ${
                             ayrilabilirKapasite > 0 ? 'bg-teal-500' : 'bg-rose-500'
                           }`}
                         />
@@ -495,7 +478,7 @@ export default function KesfetPage() {
                   </div>
 
                   {/* Donanım Etiketleri */}
-                  <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px]">
+                  <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[10px] sm:text-[11px]">
                     <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">
                       Standart: {summary?.standart_bos} boş
                     </span>
@@ -503,16 +486,16 @@ export default function KesfetPage() {
                       Erişilebilir: {summary?.erisilebilir_bos} boş
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 font-medium flex items-center gap-1">
-                      <Zap className="w-3 h-3 text-teal-600" />
+                      <Zap className="w-3 h-3 text-teal-600 shrink-0" />
                       <span>Şarjlı: {summary?.sarjli_bos} boş</span>
                     </span>
                   </div>
 
                   {/* Butonlar */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     <Link
                       href={`/otopark/${lot.id}`}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 py-1 px-2"
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-slate-50 min-h-[36px]"
                     >
                       <span>Detayları İncele</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -520,7 +503,7 @@ export default function KesfetPage() {
 
                     <Link
                       href={`/rezervasyon/yeni?lot=${lot.id}&startOffset=${startOffsetMinutes}&duration=${durationMinutes}&tur=${selectedType !== 'hepsi' ? selectedType : 'standart'}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs min-h-[38px]"
                     >
                       <span>Bu Otoparkı Ayır</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -541,16 +524,16 @@ export default function KesfetPage() {
             onSelectLot={(id) => setSelectedLotId(id)}
           />
 
-          {/* Harita Altı Hızlı İpucu */}
-          <div className="mt-3 p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-              <span>Harita üzerinde otopark pini seçtiğinizde sol listedeki ilgili tesis kartı öne çıkar.</span>
+          {/* Harita Altı İpucu */}
+          <div className="mt-2.5 p-3 rounded-xl bg-white border border-slate-200 text-[11px] sm:text-xs text-slate-600 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+              <span className="truncate">Haritada pin seçtiğinizde otopark detayları öne çıkar.</span>
             </div>
             {selectedLotId && (
               <button
                 onClick={() => setSelectedLotId(undefined)}
-                className="text-[11px] text-teal-700 font-semibold hover:underline"
+                className="text-teal-700 font-semibold hover:underline shrink-0 ml-2"
               >
                 Seçimi Kaldır
               </button>

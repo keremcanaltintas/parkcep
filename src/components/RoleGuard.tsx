@@ -70,20 +70,20 @@ export default function RoleGuard({ allowedRoles, children }: Props) {
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 pt-2 max-w-md mx-auto">
         <Link
           href="/kesfet"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold min-h-[42px]"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Keşfet Sayfasına Dön</span>
         </Link>
         <Link
           href="/giris"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs min-h-[42px]"
         >
           <LogIn className="w-4 h-4" />
-          <span>Farklı Hesapla Giriş Yap</span>
+          <span>Farklı Hesapla Giriş</span>
         </Link>
       </div>
     </div>
