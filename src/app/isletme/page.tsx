@@ -20,8 +20,14 @@ import {
   PlusCircle,
   Lock,
   Search,
-  BatteryCharging
+  BatteryCharging,
+  FileSpreadsheet,
+  Download,
+  DollarSign,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
+import { exportIsletmeExcelReport } from '@/lib/excelExport';
 
 export default function IsletmePage() {
   return (
@@ -56,7 +62,9 @@ function IsletmePanelContent() {
   const lot = useMemo(() => lots.find(l => l.id === activeLotId) || lots[0], [lots, activeLotId]);
   const summary = lotSummaries[lot.id];
 
-  const [activeTab, setActiveTab] = useState<'genel' | 'araclar' | 'kapasite' | 'sarj'>('genel');
+  const [activeTab, setActiveTab] = useState<'genel' | 'araclar' | 'kapasite' | 'sarj' | 'rapor'>('genel');
+  const [dateFilter, setDateFilter] = useState<'bugun' | 'son7gun' | 'buay' | 'tumu'>('bugun');
+  const [reportType, setReportType] = useState<'hepsi' | 'rezervasyon' | 'doluluk' | 'sarj'>('hepsi');
   const [checkInCode, setCheckInCode] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -136,6 +144,74 @@ function IsletmePanelContent() {
   const lotSpaces = spaces.filter(s => s.lot_id === lot.id);
   const lotSpaceIds = new Set(lotSpaces.map(s => s.id));
   const lotChargers = chargers.filter(c => lotSpaceIds.has(c.space_id));
+  const lotChargerIds = new Set(lotChargers.map(c => c.id));
+
+  // Dönem Filtrelerine Göre Hesaplamalar (KPI ve Raporlar İçin)
+  const todayStr = currentDemoTime.toISOString().slice(0, 10);
+  const currentMonthStr = currentDemoTime.toISOString().slice(0, 7);
+  const sevenDaysAgoTime = currentDemoTime.getTime() - 7 * 24 * 3600 * 1000;
+
+  const dateFilterLabel =
+    dateFilter === 'bugun'
+      ? 'Bugün'
+      : dateFilter === 'son7gun'
+      ? 'Son 7 Gün'
+      : dateFilter === 'buay'
+      ? 'Bu Ay'
+      : 'Tüm Zamanlar';
+
+  const periodReservations = useMemo(() => {
+    return reservations.filter(r => {
+      if (r.lot_id !== lot.id) return false;
+      const resDate = (r.cikis || r.bitis || r.olusturulma).slice(0, 10);
+      const resTime = new Date(r.cikis || r.bitis || r.olusturulma).getTime();
+      if (dateFilter === 'bugun') return resDate === todayStr;
+      if (dateFilter === 'son7gun') return resTime >= sevenDaysAgoTime;
+      if (dateFilter === 'buay') return resDate.slice(0, 7) === currentMonthStr;
+      return true;
+    });
+  }, [reservations, lot.id, dateFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+
+  const periodParkIncomeKurus = useMemo(() => {
+    return periodReservations
+      .filter(r => r.durum === 'TAMAMLANDI' || r.durum === 'İÇERİDE')
+      .reduce((acc, r) => acc + (r.park_ucreti_kurus || 0), 0);
+  }, [periodReservations]);
+
+  const periodChargeIncomeKurus = useMemo(() => {
+    return periodReservations
+      .filter(r => r.durum === 'TAMAMLANDI' || r.durum === 'İÇERİDE')
+      .reduce((acc, r) => acc + (r.sarj_ucreti_kurus || 0), 0);
+  }, [periodReservations]);
+
+  const periodTotalIncomeKurus = periodParkIncomeKurus + periodChargeIncomeKurus;
+
+  const periodCompletedCount = useMemo(() => {
+    return periodReservations.filter(r => r.durum === 'TAMAMLANDI').length;
+  }, [periodReservations]);
+
+  const periodCancelledCount = useMemo(() => {
+    return periodReservations.filter(r => r.durum === 'IPTAL' || r.durum === 'GELMEDI').length;
+  }, [periodReservations]);
+
+  const lotSessions = useMemo(() => {
+    return chargeSessions.filter(cs => lotChargerIds.has(cs.charger_id));
+  }, [chargeSessions, lotChargerIds]);
+
+  const periodSessions = useMemo(() => {
+    return lotSessions.filter(cs => {
+      const csDate = cs.baslangic.slice(0, 10);
+      const csTime = new Date(cs.baslangic).getTime();
+      if (dateFilter === 'bugun') return csDate === todayStr;
+      if (dateFilter === 'son7gun') return csTime >= sevenDaysAgoTime;
+      if (dateFilter === 'buay') return csDate.slice(0, 7) === currentMonthStr;
+      return true;
+    });
+  }, [lotSessions, dateFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+
+  const periodTotalKwh = useMemo(() => {
+    return periodSessions.reduce((acc, cs) => acc + (cs.tuketilen_kWh || 0), 0);
+  }, [periodSessions]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -199,56 +275,178 @@ function IsletmePanelContent() {
         </div>
       )}
 
-      {/* İŞLETME GÖSTERGELERİ (6 Kart) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-            Toplam Yer
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-slate-900">{summary?.toplam_yer}</div>
-          <span className="text-[10px] text-slate-500 truncate block">Kapasite</span>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-            Kapalı Yer
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-amber-600">{summary?.kapali_yer}</div>
-          <span className="text-[10px] text-amber-800 truncate block">Bakım</span>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-teal-800 block truncate">
-            Fiziksel Dolu
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-teal-700">{summary?.fiziksel_dolu_yer}</div>
-          <span className="text-[10px] text-teal-800 truncate block">İçerideki araç</span>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-800 block truncate">
-            Fiziksel Boş
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-emerald-600">{summary?.fiziksel_bos_yer}</div>
-          <span className="text-[10px] text-emerald-800 truncate block">Boş park yeri</span>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-            Bugün Beklenen
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-blue-600">{summary?.bugun_beklenen_rezervasyon}</div>
-          <span className="text-[10px] text-blue-800 truncate block">Onaylı rezervasyon</span>
-        </div>
-
-        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-            Doluluk Oranı
-          </span>
-          <div className="mt-0.5 text-xl sm:text-2xl font-black text-slate-900 truncate">
-            {summary?.doluluk_yuzdesi === 'Hizmet dışı' ? 'Hizmet Dışı' : `%${summary?.doluluk_yuzdesi}`}
+      {/* DÖNEM FİLTRESİ VE İŞLETME GÖSTERGELERİ */}
+      <div className="space-y-3">
+        {/* Filtre ve Özet Başlığı */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-teal-600 shrink-0" />
+            <span className="text-xs font-bold text-slate-800">Dönemsel KPI & Performans Filtresi:</span>
+            <span className="text-[11px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+              {dateFilterLabel}
+            </span>
           </div>
-          <span className="text-[10px] text-slate-500 truncate block">Dolu / açık</span>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setDateFilter('bugun')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[30px] ${
+                dateFilter === 'bugun'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              }`}
+            >
+              Bugün
+            </button>
+            <button
+              onClick={() => setDateFilter('son7gun')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[30px] ${
+                dateFilter === 'son7gun'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              }`}
+            >
+              Son 7 Gün
+            </button>
+            <button
+              onClick={() => setDateFilter('buay')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[30px] ${
+                dateFilter === 'buay'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              }`}
+            >
+              Bu Ay
+            </button>
+            <button
+              onClick={() => setDateFilter('tumu')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[30px] ${
+                dateFilter === 'tumu'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              }`}
+            >
+              Tüm Kayıtlar
+            </button>
+          </div>
+        </div>
+
+        {/* 1. Sıra: Kapasite ve Anlık Doluluk KPI'ları */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+              Toplam Kapasite
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-slate-900">{summary?.toplam_yer || lotSpaces.length}</div>
+            <span className="text-[10px] text-slate-500 truncate block">Park yeri</span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+              Kapalı / Bakım
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-amber-600">{summary?.kapali_yer || 0}</div>
+            <span className="text-[10px] text-amber-800 truncate block">Hizmet dışı</span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-teal-800 block truncate">
+              Fiziksel Dolu
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-teal-700">{summary?.fiziksel_dolu_yer || insideCars.length}</div>
+            <span className="text-[10px] text-teal-800 truncate block">İçerideki araç</span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-800 block truncate">
+              Fiziksel Boş
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-emerald-600">{summary?.fiziksel_bos_yer || 0}</div>
+            <span className="text-[10px] text-emerald-800 truncate block">Kullanıma hazır</span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+              Bugün Beklenen
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-blue-600">{summary?.bugun_beklenen_rezervasyon || todayExpected.length}</div>
+            <span className="text-[10px] text-blue-800 truncate block">Onaylı rezervasyon</span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+              Doluluk Oranı
+            </span>
+            <div className="mt-0.5 text-xl sm:text-2xl font-black text-slate-900 truncate">
+              {summary?.doluluk_yuzdesi === 'Hizmet dışı' ? 'Hizmet Dışı' : `%${summary?.doluluk_yuzdesi || 0}`}
+            </div>
+            <span className="text-[10px] text-slate-500 truncate block">Dolu / açık</span>
+          </div>
+        </div>
+
+        {/* 2. Sıra: Dönemsel Finans, Ziyaret ve Şarj Performansı KPI'ları */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 truncate">
+                Toplam Hasılat ({dateFilterLabel})
+              </span>
+              <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
+            </div>
+            <div className="mt-1 text-xl sm:text-2xl font-black text-slate-900">
+              {formatKurusToTL(periodTotalIncomeKurus)}
+            </div>
+            <div className="text-[10px] text-slate-500 mt-0.5 truncate flex items-center gap-1.5">
+              <span>Park: {formatKurusToTL(periodParkIncomeKurus)}</span>
+              <span>•</span>
+              <span>Şarj: {formatKurusToTL(periodChargeIncomeKurus)}</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Tamamlanan Ziyaret
+              </span>
+              <TrendingUp className="w-4 h-4 text-blue-600 shrink-0" />
+            </div>
+            <div className="mt-1 text-xl sm:text-2xl font-black text-blue-700">
+              {periodCompletedCount} Araç
+            </div>
+            <span className="text-[10px] text-slate-500 mt-0.5 truncate block">
+              Giriş & çıkış yapılmış
+            </span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal-800 truncate">
+                Şarj Tüketimi & Enerji
+              </span>
+              <Zap className="w-4 h-4 text-teal-600 shrink-0" />
+            </div>
+            <div className="mt-1 text-xl sm:text-2xl font-black text-teal-800">
+              {periodTotalKwh.toFixed(1)} kWh
+            </div>
+            <span className="text-[10px] text-teal-800 mt-0.5 truncate block">
+              {periodSessions.length} seans • {lotChargers.length} soket
+            </span>
+          </div>
+
+          <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                İptal / Gelmedi
+              </span>
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            </div>
+            <div className="mt-1 text-xl sm:text-2xl font-black text-slate-800">
+              {periodCancelledCount} Rezervasyon
+            </div>
+            <span className="text-[10px] text-slate-500 mt-0.5 truncate block">
+              Kapasiteye iade edilen
+            </span>
+          </div>
         </div>
       </div>
 
@@ -329,6 +527,18 @@ function IsletmePanelContent() {
           }`}
         >
           Şarj İstasyonları ({lotChargers.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('rapor')}
+          className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 min-h-[38px] ${
+            activeTab === 'rapor'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+          }`}
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5" />
+          <span>Excel Raporlama (.xlsx)</span>
         </button>
       </div>
 
@@ -613,6 +823,128 @@ function IsletmePanelContent() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* 5. SEKME: EXCEL RAPORLAMA */}
+      {activeTab === 'rapor' && (
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-2xs space-y-5 animate-in fade-in-50 duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                <FileSpreadsheet className="w-6 h-6" />
+              </span>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                  İşletme Excel (.xlsx) Raporlama Modülü
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {lot.ad} için çok sekmeli resmi finansal ve operasyonel Excel çalışma kitabı oluşturun.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                exportIsletmeExcelReport({
+                  lot,
+                  reservations,
+                  chargeSessions,
+                  spaces,
+                  chargers,
+                  summary,
+                  dateRangeLabel: dateFilterLabel,
+                  reportType
+                });
+                showFeedback(`${lot.ad} Excel raporu başarıyla indirildi.`, 'success');
+              }}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer min-h-[44px]"
+            >
+              <Download className="w-4 h-4" />
+              <span>Excel Raporunu İndir (.xlsx)</span>
+            </button>
+          </div>
+
+          {/* Filtre ve Rapor Parametreleri */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Rapor Tarih Aralığı:
+              </label>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value as any)}
+                aria-label="Rapor tarih aralığı"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden min-h-[40px]"
+              >
+                <option value="bugun">Bugün ({todayStr})</option>
+                <option value="son7gun">Son 7 Günlük Dönem</option>
+                <option value="buay">Bu Ay ({currentMonthStr})</option>
+                <option value="tumu">Tüm Kayıtlar ve Geçmiş</option>
+              </select>
+              <span className="text-[10px] text-slate-500 mt-1 block">
+                Seçilen döneme ait rezervasyon, ziyaret ve hasılatlar filtrelenir.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Rapor Kapsamı & Türü:
+              </label>
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value as any)}
+                aria-label="Rapor kapsamı"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden min-h-[40px]"
+              >
+                <option value="hepsi">Kapsamlı Rapor (Tüm Sayfalar: Özet + Rezervasyon + Şarj + Donanım)</option>
+                <option value="rezervasyon">Yalnızca Rezervasyon ve Giriş-Çıkış Kayıtları</option>
+                <option value="doluluk">Yalnızca Kapasite, Doluluk ve Park Yerleri</option>
+                <option value="sarj">Yalnızca Şarj Seansları ve Elektrik Tüketimi</option>
+              </select>
+              <span className="text-[10px] text-slate-500 mt-1 block">
+                Excel dosyasında açılacak çalışma sayfalarını belirler.
+              </span>
+            </div>
+          </div>
+
+          {/* Excel Önizleme Özeti */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Dışa Aktarılacak Veri Önizlemesi ({dateFilterLabel})
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] text-slate-500 block">Kapsanan Rezervasyon</span>
+                <strong className="text-sm text-slate-900">{periodReservations.length} Adet</strong>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] text-slate-500 block">Kapsanan Şarj Seansı</span>
+                <strong className="text-sm text-slate-900">{periodSessions.length} Seans</strong>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] text-slate-500 block">Dönemsel Toplam Ciro</span>
+                <strong className="text-sm text-emerald-700">{formatKurusToTL(periodTotalIncomeKurus)}</strong>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] text-slate-500 block">Toplam Şarj Enerjisi</span>
+                <strong className="text-sm text-teal-700">{periodTotalKwh.toFixed(1)} kWh</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Excel Çalışma Sayfaları Bilgilendirmesi */}
+          <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs text-emerald-950 space-y-1">
+            <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+              <span>📄 Excel Dosyası Format Standartları:</span>
+            </div>
+            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-emerald-900/90 pl-1">
+              <li>Resmi <strong>.xlsx</strong> biçimindedir (Excel, LibreOffice ve Google Sheets ile tam uyumlu).</li>
+              <li>Sütun genişlikleri metin uzunluğuna göre otomatik hizalanır.</li>
+              <li>Para birimi alanları (TL) ve tarihler nizami numerik biçimlendirilmiştir.</li>
+              <li>Rapor başlığı, üretilme zamanı ve filtre bilgileri ilk satırlara yerleştirilmiştir.</li>
+            </ul>
           </div>
         </div>
       )}

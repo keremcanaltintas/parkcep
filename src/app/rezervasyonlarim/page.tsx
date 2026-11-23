@@ -78,6 +78,47 @@ function RezervasyonlarimContent() {
         </Link>
       </div>
 
+      {/* KPI Kartları */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+            Toplam Rezervasyon
+          </span>
+          <div className="mt-1 text-2xl font-black text-slate-900">{myReservations.length}</div>
+          <span className="text-[10px] text-slate-500 truncate block">Tüm kayıtlar</span>
+        </div>
+
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-teal-800 block truncate">
+            İçerideki Araç
+          </span>
+          <div className="mt-1 text-2xl font-black text-teal-700">
+            {myReservations.filter((r) => r.durum === 'İÇERİDE').length}
+          </div>
+          <span className="text-[10px] text-teal-800 truncate block">Aktif park</span>
+        </div>
+
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-blue-200 bg-blue-50/20 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-800 block truncate">
+            Onaylı / Bekleyen
+          </span>
+          <div className="mt-1 text-2xl font-black text-blue-600">
+            {myReservations.filter((r) => r.durum === 'ONAYLI').length}
+          </div>
+          <span className="text-[10px] text-blue-800 truncate block">Giriş bekleniyor</span>
+        </div>
+
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-800 block truncate">
+            Tamamlanan
+          </span>
+          <div className="mt-1 text-2xl font-black text-emerald-600">
+            {myReservations.filter((r) => r.durum === 'TAMAMLANDI').length}
+          </div>
+          <span className="text-[10px] text-emerald-800 truncate block">Geçmiş ziyaret</span>
+        </div>
+      </div>
+
       {cancelError && (
         <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">

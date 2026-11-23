@@ -34,7 +34,9 @@ function DemoControlContent() {
     currentDemoTime,
     clockOffsetSeconds,
     advanceClock,
-    resetDemoData
+    resetDemoData,
+    spaces,
+    lots
   } = useStore();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -49,7 +51,7 @@ function DemoControlContent() {
   const handleReset = () => {
     resetDemoData();
     setShowResetConfirm(false);
-    setTestResultFeedback('Tüm veritabanı başlangıç kurgusuna (30 yer / 7 dolu / 1 kapalı / 22 boş) başarıyla sıfırlandı.');
+    setTestResultFeedback(`Tüm veritabanı başlangıç kurgusuna (${lots.length} tesis / ${spaces.length} park yeri) başarıyla sıfırlandı.`);
     setTimeout(() => setTestResultFeedback(null), 4000);
   };
 

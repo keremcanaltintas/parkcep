@@ -10,9 +10,14 @@ import {
   Zap,
   CheckCircle2,
   ShieldCheck,
-  Building2
+  Building2,
+  FileSpreadsheet,
+  Download,
+  DollarSign,
+  TrendingUp
 } from 'lucide-react';
-import { formatIstanbulDate } from '@/lib/calculations';
+import { formatIstanbulDate, formatKurusToTL } from '@/lib/calculations';
+import { exportBelediyeExcelReport } from '@/lib/excelExport';
 
 export default function BelediyePage() {
   return (
@@ -23,12 +28,14 @@ export default function BelediyePage() {
 }
 
 function BelediyePanelContent() {
-  const { lots, spaces, reservations, lotSummaries, currentDemoTime } = useStore();
+  const { lots, spaces, chargers, reservations, chargeSessions, lotSummaries, currentDemoTime } = useStore();
 
   const [selectedLotFilter, setSelectedLotFilter] = useState<string>('hepsi');
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>('bugun');
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
   const todayStr = currentDemoTime.toISOString().slice(0, 10);
+  const currentMonthStr = currentDemoTime.toISOString().slice(0, 7);
   const sevenDaysAgoTime = currentDemoTime.getTime() - 7 * 24 * 3600 * 1000;
 
   const activeLots = useMemo(() => {
@@ -42,11 +49,14 @@ function BelediyePanelContent() {
         if (r.durum !== 'TAMAMLANDI') return false;
         if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
 
+        const resDate = (r.cikis || r.bitis).slice(0, 10);
         const resTime = new Date(r.cikis || r.bitis).getTime();
         if (selectedDayFilter === 'bugun') {
-          return (r.cikis || r.bitis).slice(0, 10) === todayStr;
+          return resDate === todayStr;
         } else if (selectedDayFilter === 'son7gun') {
           return resTime >= sevenDaysAgoTime;
+        } else if (selectedDayFilter === 'buay') {
+          return resDate.slice(0, 7) === currentMonthStr;
         }
         return true;
       })
@@ -64,19 +74,56 @@ function BelediyePanelContent() {
           erisilebilir_mi: r.erisilebilir_ihtiyac_beyani === true
         };
       });
-  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, sevenDaysAgoTime]);
+  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
 
   const createdReservationsCount = useMemo(() => {
     return reservations.filter((r) => {
       if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
+      const resDate = r.olusturulma.slice(0, 10);
+      const resTime = new Date(r.olusturulma).getTime();
       if (selectedDayFilter === 'bugun') {
-        return r.olusturulma.slice(0, 10) === todayStr;
+        return resDate === todayStr;
       } else if (selectedDayFilter === 'son7gun') {
-        return new Date(r.olusturulma).getTime() >= sevenDaysAgoTime;
+        return resTime >= sevenDaysAgoTime;
+      } else if (selectedDayFilter === 'buay') {
+        return resDate.slice(0, 7) === currentMonthStr;
       }
       return true;
     }).length;
-  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, sevenDaysAgoTime]);
+  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+
+  const periodTotalRevenueKurus = useMemo(() => {
+    return reservations
+      .filter((r) => {
+        if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
+        if (r.durum !== 'TAMAMLANDI' && r.durum !== 'İÇERİDE') return false;
+        const resDate = (r.cikis || r.bitis || r.olusturulma).slice(0, 10);
+        const resTime = new Date(r.cikis || r.bitis || r.olusturulma).getTime();
+        if (selectedDayFilter === 'bugun') return resDate === todayStr;
+        if (selectedDayFilter === 'son7gun') return resTime >= sevenDaysAgoTime;
+        if (selectedDayFilter === 'buay') return resDate.slice(0, 7) === currentMonthStr;
+        return true;
+      })
+      .reduce((acc, r) => acc + (r.park_ucreti_kurus || 0) + (r.sarj_ucreti_kurus || 0), 0);
+  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+
+  const periodTotalEnergyKwh = useMemo(() => {
+    const activeLotIds = new Set(activeLots.map(l => l.id));
+    return chargeSessions
+      .filter((cs) => {
+        const ch = chargers.find(c => c.id === cs.charger_id);
+        if (!ch) return false;
+        const sp = spaces.find(s => s.id === ch.space_id);
+        if (!sp || !activeLotIds.has(sp.lot_id)) return false;
+        const csDate = cs.baslangic.slice(0, 10);
+        const csTime = new Date(cs.baslangic).getTime();
+        if (selectedDayFilter === 'bugun') return csDate === todayStr;
+        if (selectedDayFilter === 'son7gun') return csTime >= sevenDaysAgoTime;
+        if (selectedDayFilter === 'buay') return csDate.slice(0, 7) === currentMonthStr;
+        return true;
+      })
+      .reduce((acc, cs) => acc + (cs.tuketilen_kWh || 0), 0);
+  }, [chargeSessions, chargers, spaces, activeLots, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
 
   const averageDurationMinutes = useMemo(() => {
     if (completedVisits.length === 0) return 0;
@@ -103,13 +150,29 @@ function BelediyePanelContent() {
     : 0;
 
   const accessibleSpacesCount = useMemo(() => {
-    return spaces.filter(s => s.tur === 'erisilebilir' && !s.kapali_mi).length;
-  }, [spaces]);
+    const activeLotIds = new Set(activeLots.map(l => l.id));
+    return spaces.filter(s => activeLotIds.has(s.lot_id) && s.tur === 'erisilebilir' && !s.kapali_mi).length;
+  }, [spaces, activeLots]);
+
+  const handleExportExcel = () => {
+    exportBelediyeExcelReport({
+      lots,
+      spaces,
+      chargers,
+      reservations,
+      chargeSessions,
+      lotSummaries,
+      selectedLotFilter,
+      selectedDayFilter
+    });
+    setExportFeedback('Belediye Excel Analitik Raporu (.xlsx) başarıyla indirildi.');
+    setTimeout(() => setExportFeedback(null), 5000);
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Üst Başlık */}
-      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xs space-y-3">
+      {/* Üst Başlık & Excel İndirme Aksiyonu */}
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -125,11 +188,34 @@ function BelediyePanelContent() {
             </h1>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-600 shrink-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Kişisel Veriler Maskelenmiştir (KVKK)</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer min-h-[42px]"
+              title="Resmi çok sekmeli Excel raporunu bilgisayarınıza indirin"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Excel Raporu İndir (.xlsx)</span>
+              <Download className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-600 shrink-0">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>KVKK Uyumlu</span>
+            </div>
           </div>
         </div>
+
+        {/* Başarı Geri Bildirimi */}
+        {exportFeedback && (
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{exportFeedback}</span>
+            </div>
+            <button onClick={() => setExportFeedback(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+        )}
 
         {/* Filtreleme Çubuğu */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-3 border-t border-slate-100">
@@ -141,9 +227,9 @@ function BelediyePanelContent() {
               aria-label="Tesis filtresi seçimi"
               className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden w-full min-h-[38px]"
             >
-              <option value="hepsi">Tüm Tesisler (Kadıköy, Beşiktaş, Üsküdar)</option>
+              <option value="hepsi">Tüm Tesisler ({lots.length} İlçe Otoparkı)</option>
               {lots.map(l => (
-                <option key={l.id} value={l.id}>{l.ad}</option>
+                <option key={l.id} value={l.id}>{l.ad} ({l.ornek_bolge})</option>
               ))}
             </select>
           </div>
@@ -158,63 +244,90 @@ function BelediyePanelContent() {
             >
               <option value="bugun">Bugün ({formatIstanbulDate(currentDemoTime)})</option>
               <option value="son7gun">Son 7 Günlük Dönem</option>
+              <option value="buay">Bu Ay ({currentMonthStr})</option>
               <option value="tumu">Tüm Kayıtlar</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* BELEDİYE METRİKLERİ KARTLARI */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] sm:text-xs font-semibold">
+      {/* BELEDİYE METRİKLERİ KARTLARI (6 Kart) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Şehir Doluluğu</span>
             <Building2 className="w-4 h-4 text-teal-600 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
             %{overallOccupancyPercent}
           </div>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 block truncate">
-            {totalPhysicalInside} araç / {totalOpenSpaces} açık yer
+          <span className="text-[10px] text-slate-500 block truncate">
+            {totalPhysicalInside} araç / {totalOpenSpaces} açık
           </span>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] sm:text-xs font-semibold">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Rezervasyon</span>
             <BarChart3 className="w-4 h-4 text-blue-600 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
             {createdReservationsCount}
           </div>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 block truncate">
-            Seçili zaman aralığında
+          <span className="text-[10px] text-slate-500 block truncate">
+            Kayıtlı rezervasyon
           </span>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] sm:text-xs font-semibold">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Tamamlanan</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">
+          <div className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">
             {completedVisits.length}
           </div>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 block truncate">
-            Giriş ve çıkış yapılmış
+          <span className="text-[10px] text-slate-500 block truncate">
+            Giriş & çıkış yapılmış
           </span>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-[11px] sm:text-xs font-semibold">
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Ortalama Park</span>
             <Clock className="w-4 h-4 text-amber-600 shrink-0" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
-            {averageDurationMinutes > 0 ? `${averageDurationMinutes} dk` : 'Veri yok'}
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+            {averageDurationMinutes > 0 ? `${averageDurationMinutes} dk` : '0 dk'}
           </div>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 block truncate">
-            {averageDurationMinutes > 0 ? `(~${(averageDurationMinutes / 60).toFixed(1)} saat)` : 'Ziyaret yok'}
+          <span className="text-[10px] text-slate-500 block truncate">
+            {averageDurationMinutes > 0 ? `(~${(averageDurationMinutes / 60).toFixed(1)} sa)` : 'Ziyaret yok'}
+          </span>
+        </div>
+
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+            <span className="truncate text-emerald-800">Toplam Hasılat</span>
+            <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
+            {formatKurusToTL(periodTotalRevenueKurus)}
+          </div>
+          <span className="text-[10px] text-emerald-800 block truncate font-medium">
+            Park & şarj geliri
+          </span>
+        </div>
+
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+            <span className="truncate text-teal-800">Yeşil Enerji</span>
+            <Zap className="w-4 h-4 text-teal-600 shrink-0" />
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-teal-800 mt-0.5">
+            {periodTotalEnergyKwh.toFixed(1)} kWh
+          </div>
+          <span className="text-[10px] text-teal-800 block truncate font-medium">
+            Dağıtılan EV şarjı
           </span>
         </div>
       </div>

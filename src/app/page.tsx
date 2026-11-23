@@ -71,7 +71,7 @@ export default function HomePage() {
               Sistem Genel Durumu & Kapasite Özeti
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500">
-              Pilot bölgedeki 3 kurgusal tesisin anlık ortak veritabanı durumu
+              Pilot bölgedeki {lots.length} kurgusal tesisin anlık ortak veritabanı durumu
             </p>
           </div>
           <div className="text-[11px] sm:text-xs text-slate-500 flex items-center gap-2">
@@ -89,7 +89,7 @@ export default function HomePage() {
               {totalOccupancy.toplam_yer}
             </div>
             <span className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 block truncate">
-              3 tesiste kayıtlı kaynak
+              {lots.length} tesiste kayıtlı kaynak
             </span>
           </div>
 
