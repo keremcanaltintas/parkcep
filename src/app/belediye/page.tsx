@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import { useStore } from '@/lib/store';
-import RoleGuard from '@/components/RoleGuard';
+import React, { useState, useMemo } from "react";
+import { useStore } from "@/lib/store";
+import RoleGuard from "@/components/RoleGuard";
 import {
   BarChart3,
   Clock,
@@ -14,24 +14,37 @@ import {
   FileSpreadsheet,
   Download,
   DollarSign,
-  TrendingUp
-} from 'lucide-react';
-import { formatIstanbulDate, formatKurusToTL } from '@/lib/calculations';
-import { exportBelediyeExcelReport } from '@/lib/excelExport';
+  TrendingUp,
+} from "lucide-react";
+import {
+  formatIstanbulDate,
+  formatKurusToTL,
+  calculateParkingPriceKurus,
+  calculateChargePriceKurus,
+} from "@/lib/calculations";
+import { exportBelediyeExcelReport } from "@/lib/excelExport";
 
 export default function BelediyePage() {
   return (
-    <RoleGuard allowedRoles={['belediye', 'demo_yoneticisi']}>
+    <RoleGuard allowedRoles={["belediye", "demo_yoneticisi"]}>
       <BelediyePanelContent />
     </RoleGuard>
   );
 }
 
 function BelediyePanelContent() {
-  const { lots, spaces, chargers, reservations, chargeSessions, lotSummaries, currentDemoTime } = useStore();
+  const {
+    lots,
+    spaces,
+    chargers,
+    reservations,
+    chargeSessions,
+    lotSummaries,
+    currentDemoTime,
+  } = useStore();
 
-  const [selectedLotFilter, setSelectedLotFilter] = useState<string>('hepsi');
-  const [selectedDayFilter, setSelectedDayFilter] = useState<string>('bugun');
+  const [selectedLotFilter, setSelectedLotFilter] = useState<string>("hepsi");
+  const [selectedDayFilter, setSelectedDayFilter] = useState<string>("bugun");
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
   const todayStr = currentDemoTime.toISOString().slice(0, 10);
@@ -39,23 +52,24 @@ function BelediyePanelContent() {
   const sevenDaysAgoTime = currentDemoTime.getTime() - 7 * 24 * 3600 * 1000;
 
   const activeLots = useMemo(() => {
-    if (selectedLotFilter === 'hepsi') return lots;
-    return lots.filter(l => l.id === selectedLotFilter);
+    if (selectedLotFilter === "hepsi") return lots;
+    return lots.filter((l) => l.id === selectedLotFilter);
   }, [lots, selectedLotFilter]);
 
   const completedVisits = useMemo(() => {
     return reservations
       .filter((r) => {
-        if (r.durum !== 'TAMAMLANDI') return false;
-        if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
+        if (r.durum !== "TAMAMLANDI") return false;
+        if (selectedLotFilter !== "hepsi" && r.lot_id !== selectedLotFilter)
+          return false;
 
         const resDate = (r.cikis || r.bitis).slice(0, 10);
         const resTime = new Date(r.cikis || r.bitis).getTime();
-        if (selectedDayFilter === 'bugun') {
+        if (selectedDayFilter === "bugun") {
           return resDate === todayStr;
-        } else if (selectedDayFilter === 'son7gun') {
+        } else if (selectedDayFilter === "son7gun") {
           return resTime >= sevenDaysAgoTime;
-        } else if (selectedDayFilter === 'buay') {
+        } else if (selectedDayFilter === "buay") {
           return resDate.slice(0, 7) === currentMonthStr;
         }
         return true;
@@ -63,7 +77,10 @@ function BelediyePanelContent() {
       .map((r) => {
         const start = new Date(r.giris || r.baslangic).getTime();
         const end = new Date(r.cikis || r.bitis).getTime();
-        const durationMinutes = Math.max(0, Math.round((end - start) / (60 * 1000)));
+        const durationMinutes = Math.max(
+          0,
+          Math.round((end - start) / (60 * 1000)),
+        );
 
         return {
           id: r.id,
@@ -71,87 +88,151 @@ function BelediyePanelContent() {
           tarih: (r.cikis || r.bitis).slice(0, 10),
           sure_dakika: durationMinutes,
           sarj_var_mi: r.soket_tipi !== undefined,
-          erisilebilir_mi: r.erisilebilir_ihtiyac_beyani === true
+          erisilebilir_mi: r.erisilebilir_ihtiyac_beyani === true,
         };
       });
-  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+  }, [
+    reservations,
+    selectedLotFilter,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
 
   const createdReservationsCount = useMemo(() => {
     return reservations.filter((r) => {
-      if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
+      if (selectedLotFilter !== "hepsi" && r.lot_id !== selectedLotFilter)
+        return false;
       const resDate = r.olusturulma.slice(0, 10);
       const resTime = new Date(r.olusturulma).getTime();
-      if (selectedDayFilter === 'bugun') {
+      if (selectedDayFilter === "bugun") {
         return resDate === todayStr;
-      } else if (selectedDayFilter === 'son7gun') {
+      } else if (selectedDayFilter === "son7gun") {
         return resTime >= sevenDaysAgoTime;
-      } else if (selectedDayFilter === 'buay') {
+      } else if (selectedDayFilter === "buay") {
         return resDate.slice(0, 7) === currentMonthStr;
       }
       return true;
     }).length;
-  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+  }, [
+    reservations,
+    selectedLotFilter,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
 
   const periodTotalRevenueKurus = useMemo(() => {
-    return reservations
-      .filter((r) => {
-        if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
-        if (r.durum !== 'TAMAMLANDI' && r.durum !== 'İÇERİDE') return false;
-        const resDate = (r.cikis || r.bitis || r.olusturulma).slice(0, 10);
-        const resTime = new Date(r.cikis || r.bitis || r.olusturulma).getTime();
-        if (selectedDayFilter === 'bugun') return resDate === todayStr;
-        if (selectedDayFilter === 'son7gun') return resTime >= sevenDaysAgoTime;
-        if (selectedDayFilter === 'buay') return resDate.slice(0, 7) === currentMonthStr;
-        return true;
-      })
-      .reduce((acc, r) => acc + (r.park_ucreti_kurus || 0) + (r.sarj_ucreti_kurus || 0), 0);
-  }, [reservations, selectedLotFilter, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+    const filteredReservations = reservations.filter((r) => {
+      if (selectedLotFilter !== "hepsi" && r.lot_id !== selectedLotFilter)
+        return false;
+      if (r.durum !== "TAMAMLANDI" && r.durum !== "İÇERİDE") return false;
+      const resDate = (r.cikis || r.bitis || r.olusturulma).slice(0, 10);
+      const resTime = new Date(r.cikis || r.bitis || r.olusturulma).getTime();
+      if (selectedDayFilter === "bugun") return resDate === todayStr;
+      if (selectedDayFilter === "son7gun") return resTime >= sevenDaysAgoTime;
+      if (selectedDayFilter === "buay")
+        return resDate.slice(0, 7) === currentMonthStr;
+      return true;
+    });
+
+    return filteredReservations.reduce((total, r) => {
+      const start = r.giris || r.baslangic;
+      const end = r.cikis || r.bitis;
+      const parking = calculateParkingPriceKurus(
+        start,
+        end,
+        r.saatlik_tarife_kurus,
+      ).totalKurus;
+
+      const charge = chargeSessions
+        .filter((session) => session.reservation_id === r.id)
+        .reduce((sum, session) => {
+          const sessionCost = calculateChargePriceKurus(
+            session.enerji_kWh,
+            session.birim_fiyat_kurus,
+          );
+          return sum + sessionCost;
+        }, 0);
+
+      return total + parking + charge;
+    }, 0);
+  }, [
+    reservations,
+    chargeSessions,
+    selectedLotFilter,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
 
   const periodTotalEnergyKwh = useMemo(() => {
-    const activeLotIds = new Set(activeLots.map(l => l.id));
+    const activeLotIds = new Set(activeLots.map((l) => l.id));
     return chargeSessions
       .filter((cs) => {
-        const ch = chargers.find(c => c.id === cs.charger_id);
+        const ch = chargers.find((c) => c.id === cs.charger_id);
         if (!ch) return false;
-        const sp = spaces.find(s => s.id === ch.space_id);
+        const sp = spaces.find((s) => s.id === ch.space_id);
         if (!sp || !activeLotIds.has(sp.lot_id)) return false;
         const csDate = cs.baslangic.slice(0, 10);
         const csTime = new Date(cs.baslangic).getTime();
-        if (selectedDayFilter === 'bugun') return csDate === todayStr;
-        if (selectedDayFilter === 'son7gun') return csTime >= sevenDaysAgoTime;
-        if (selectedDayFilter === 'buay') return csDate.slice(0, 7) === currentMonthStr;
+        if (selectedDayFilter === "bugun") return csDate === todayStr;
+        if (selectedDayFilter === "son7gun") return csTime >= sevenDaysAgoTime;
+        if (selectedDayFilter === "buay")
+          return csDate.slice(0, 7) === currentMonthStr;
         return true;
       })
-      .reduce((acc, cs) => acc + (cs.tuketilen_kWh || 0), 0);
-  }, [chargeSessions, chargers, spaces, activeLots, selectedDayFilter, todayStr, currentMonthStr, sevenDaysAgoTime]);
+      .reduce((acc, cs) => acc + cs.enerji_kWh, 0);
+  }, [
+    chargeSessions,
+    chargers,
+    spaces,
+    activeLots,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
 
   const averageDurationMinutes = useMemo(() => {
     if (completedVisits.length === 0) return 0;
-    const totalMinutes = completedVisits.reduce((acc, v) => acc + v.sure_dakika, 0);
+    const totalMinutes = completedVisits.reduce(
+      (acc, v) => acc + v.sure_dakika,
+      0,
+    );
     return Math.round(totalMinutes / completedVisits.length);
   }, [completedVisits]);
 
   const totalPhysicalInside = useMemo(() => {
-    return reservations.filter(r => {
-      if (selectedLotFilter !== 'hepsi' && r.lot_id !== selectedLotFilter) return false;
-      return r.durum === 'İÇERİDE';
+    return reservations.filter((r) => {
+      if (selectedLotFilter !== "hepsi" && r.lot_id !== selectedLotFilter)
+        return false;
+      return r.durum === "İÇERİDE";
     }).length;
   }, [reservations, selectedLotFilter]);
 
   const totalOpenSpaces = useMemo(() => {
-    return spaces.filter(s => {
-      if (selectedLotFilter !== 'hepsi' && s.lot_id !== selectedLotFilter) return false;
+    return spaces.filter((s) => {
+      if (selectedLotFilter !== "hepsi" && s.lot_id !== selectedLotFilter)
+        return false;
       return !s.kapali_mi;
     }).length;
   }, [spaces, selectedLotFilter]);
 
-  const overallOccupancyPercent = totalOpenSpaces > 0
-    ? Math.round((totalPhysicalInside / totalOpenSpaces) * 100)
-    : 0;
+  const overallOccupancyPercent =
+    totalOpenSpaces > 0
+      ? Math.round((totalPhysicalInside / totalOpenSpaces) * 100)
+      : 0;
 
   const accessibleSpacesCount = useMemo(() => {
-    const activeLotIds = new Set(activeLots.map(l => l.id));
-    return spaces.filter(s => activeLotIds.has(s.lot_id) && s.tur === 'erisilebilir' && !s.kapali_mi).length;
+    const activeLotIds = new Set(activeLots.map((l) => l.id));
+    return spaces.filter(
+      (s) =>
+        activeLotIds.has(s.lot_id) && s.tur === "erisilebilir" && !s.kapali_mi,
+    ).length;
   }, [spaces, activeLots]);
 
   const handleExportExcel = () => {
@@ -163,9 +244,11 @@ function BelediyePanelContent() {
       chargeSessions,
       lotSummaries,
       selectedLotFilter,
-      selectedDayFilter
+      selectedDayFilter,
     });
-    setExportFeedback('Belediye Excel Analitik Raporu (.xlsx) başarıyla indirildi.');
+    setExportFeedback(
+      "Belediye Excel Analitik Raporu (.xlsx) başarıyla indirildi.",
+    );
     setTimeout(() => setExportFeedback(null), 5000);
   };
 
@@ -213,36 +296,51 @@ function BelediyePanelContent() {
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{exportFeedback}</span>
             </div>
-            <button onClick={() => setExportFeedback(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+            <button
+              onClick={() => setExportFeedback(null)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
           </div>
         )}
 
         {/* Filtreleme Çubuğu */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-3 border-t border-slate-100">
           <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs font-bold text-slate-600 shrink-0">Tesis:</span>
+            <span className="text-xs font-bold text-slate-600 shrink-0">
+              Tesis:
+            </span>
             <select
               value={selectedLotFilter}
               onChange={(e) => setSelectedLotFilter(e.target.value)}
               aria-label="Tesis filtresi seçimi"
               className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden w-full min-h-[38px]"
             >
-              <option value="hepsi">Tüm Tesisler ({lots.length} İlçe Otoparkı)</option>
-              {lots.map(l => (
-                <option key={l.id} value={l.id}>{l.ad} ({l.ornek_bolge})</option>
+              <option value="hepsi">
+                Tüm Tesisler ({lots.length} İlçe Otoparkı)
+              </option>
+              {lots.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.ad} ({l.ornek_bolge})
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs font-bold text-slate-600 shrink-0">Zaman:</span>
+            <span className="text-xs font-bold text-slate-600 shrink-0">
+              Zaman:
+            </span>
             <select
               value={selectedDayFilter}
               onChange={(e) => setSelectedDayFilter(e.target.value)}
               aria-label="Zaman filtresi seçimi"
               className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden w-full min-h-[38px]"
             >
-              <option value="bugun">Bugün ({formatIstanbulDate(currentDemoTime)})</option>
+              <option value="bugun">
+                Bugün ({formatIstanbulDate(currentDemoTime)})
+              </option>
               <option value="son7gun">Son 7 Günlük Dönem</option>
               <option value="buay">Bu Ay ({currentMonthStr})</option>
               <option value="tumu">Tüm Kayıtlar</option>
@@ -298,10 +396,14 @@ function BelediyePanelContent() {
             <Clock className="w-4 h-4 text-amber-600 shrink-0" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-            {averageDurationMinutes > 0 ? `${averageDurationMinutes} dk` : '0 dk'}
+            {averageDurationMinutes > 0
+              ? `${averageDurationMinutes} dk`
+              : "0 dk"}
           </div>
           <span className="text-[10px] text-slate-500 block truncate">
-            {averageDurationMinutes > 0 ? `(~${(averageDurationMinutes / 60).toFixed(1)} sa)` : 'Ziyaret yok'}
+            {averageDurationMinutes > 0
+              ? `(~${(averageDurationMinutes / 60).toFixed(1)} sa)`
+              : "Ziyaret yok"}
           </span>
         </div>
 
@@ -346,14 +448,24 @@ function BelediyePanelContent() {
         <div className="space-y-3">
           {activeLots.map((l) => {
             const sum = lotSummaries[l.id];
-            const pct = sum?.doluluk_yuzdesi === 'Hizmet dışı' ? 0 : Number(sum?.doluluk_yuzdesi || 0);
+            const pct =
+              sum?.doluluk_yuzdesi === "Hizmet dışı"
+                ? 0
+                : Number(sum?.doluluk_yuzdesi || 0);
 
             return (
-              <div key={l.id} className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-2">
+              <div
+                key={l.id}
+                className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-2"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <div className="min-w-0">
-                    <span className="font-extrabold text-xs sm:text-sm text-slate-900">{l.ad}</span>
-                    <span className="text-xs text-teal-700 font-medium ml-1.5">({l.ornek_bolge})</span>
+                    <span className="font-extrabold text-xs sm:text-sm text-slate-900">
+                      {l.ad}
+                    </span>
+                    <span className="text-xs text-teal-700 font-medium ml-1.5">
+                      ({l.ornek_bolge})
+                    </span>
                     {l.toplu_tasima_etiketi && (
                       <span className="ml-2 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800">
                         🚇 Toplu Taşıma
@@ -361,7 +473,11 @@ function BelediyePanelContent() {
                     )}
                   </div>
                   <div className="text-[11px] sm:text-xs font-semibold text-slate-700">
-                    {sum?.fiziksel_dolu_yer} / {sum?.toplam_yer} Yer Dolu ({sum?.doluluk_yuzdesi === 'Hizmet dışı' ? 'Hizmet Dışı' : `%${sum?.doluluk_yuzdesi}`})
+                    {sum?.fiziksel_dolu_yer} / {sum?.toplam_yer} Yer Dolu (
+                    {sum?.doluluk_yuzdesi === "Hizmet dışı"
+                      ? "Hizmet Dışı"
+                      : `%${sum?.doluluk_yuzdesi}`}
+                    )
                   </div>
                 </div>
 
@@ -375,10 +491,21 @@ function BelediyePanelContent() {
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 pt-0.5 flex-wrap gap-1">
-                  <span>Standart: <strong>{sum?.standart_bos}</strong></span>
-                  <span>Erişilebilir: <strong>{sum?.erisilebilir_bos}</strong></span>
-                  <span>Şarjlı: <strong>{sum?.sarjli_bos}</strong></span>
-                  <span>Kapalı: <strong className="text-amber-700">{sum?.kapali_yer}</strong></span>
+                  <span>
+                    Standart: <strong>{sum?.standart_bos}</strong>
+                  </span>
+                  <span>
+                    Erişilebilir: <strong>{sum?.erisilebilir_bos}</strong>
+                  </span>
+                  <span>
+                    Şarjlı: <strong>{sum?.sarjli_bos}</strong>
+                  </span>
+                  <span>
+                    Kapalı:{" "}
+                    <strong className="text-amber-700">
+                      {sum?.kapali_yer}
+                    </strong>
+                  </span>
                 </div>
               </div>
             );
@@ -394,11 +521,18 @@ function BelediyePanelContent() {
             <span>Engelsiz Şehir & Erişilebilir Park Donanımı</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Pilot bölgedeki tesislerde toplam <strong>{accessibleSpacesCount} adet erişilebilir park alanı</strong> bulunmaktadır. İhtiyaç sahibi sürücüler rezervasyonla yer garantisi sağlar.
+            Pilot bölgedeki tesislerde toplam{" "}
+            <strong>
+              {accessibleSpacesCount} adet erişilebilir park alanı
+            </strong>{" "}
+            bulunmaktadır. İhtiyaç sahibi sürücüler rezervasyonla yer garantisi
+            sağlar.
           </p>
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-700">
             <span>Erişilebilir Tesis Oranı:</span>
-            <strong className="font-bold text-blue-700">%100 (Tüm Tesislerde)</strong>
+            <strong className="font-bold text-blue-700">
+              %100 (Tüm Tesislerde)
+            </strong>
           </div>
         </div>
 
@@ -408,11 +542,15 @@ function BelediyePanelContent() {
             <span>Toplu Taşıma ve Park & Ride Entegrasyonu</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Üsküdar Aktarma Merkezi tesisi <strong>Marmaray ve Metro entegrasyonu</strong> ile Park & Ride modelini destekleyerek tarihi yarımada trafiğini azaltır.
+            Üsküdar Aktarma Merkezi tesisi{" "}
+            <strong>Marmaray ve Metro entegrasyonu</strong> ile Park & Ride
+            modelini destekleyerek tarihi yarımada trafiğini azaltır.
           </p>
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-700">
             <span>Örnek Aktarma Tesisi:</span>
-            <strong className="font-bold text-teal-700">ParkCep Aktarma Merkezi</strong>
+            <strong className="font-bold text-teal-700">
+              ParkCep Aktarma Merkezi
+            </strong>
           </div>
         </div>
       </div>
@@ -425,7 +563,8 @@ function BelediyePanelContent() {
               Tamamlanan Ziyaret Akışı (Toplulaştırılmış Kayıtlar)
             </h3>
             <p className="text-[10px] sm:text-[11px] text-slate-500">
-              * KVKK gereği kullanıcı adı, e-posta, plaka ve kodlar belediye ekranına yansıtılmaz.
+              * KVKK gereği kullanıcı adı, e-posta, plaka ve kodlar belediye
+              ekranına yansıtılmaz.
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 shrink-0">
@@ -448,11 +587,17 @@ function BelediyePanelContent() {
             <tbody className="divide-y divide-slate-100">
               {completedVisits.slice(0, 15).map((v, i) => (
                 <tr key={v.id || i} className="hover:bg-slate-50/50">
-                  <td className="py-2.5 px-3 font-medium text-slate-700 whitespace-nowrap">{v.tarih}</td>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                    {lots.find(l => l.id === v.lot_id)?.ad.replace('ParkCep ', '')}
+                  <td className="py-2.5 px-3 font-medium text-slate-700 whitespace-nowrap">
+                    {v.tarih}
                   </td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">{v.sure_dakika} dk</td>
+                  <td className="py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                    {lots
+                      .find((l) => l.id === v.lot_id)
+                      ?.ad.replace("ParkCep ", "")}
+                  </td>
+                  <td className="py-2.5 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                    {v.sure_dakika} dk
+                  </td>
                   <td className="py-2.5 px-3 whitespace-nowrap">
                     {v.sarj_var_mi ? (
                       <span className="text-teal-700 font-semibold flex items-center gap-1">
@@ -464,7 +609,9 @@ function BelediyePanelContent() {
                   </td>
                   <td className="py-2.5 px-3 whitespace-nowrap">
                     {v.erisilebilir_mi ? (
-                      <span className="text-blue-700 font-semibold">Erişilebilir</span>
+                      <span className="text-blue-700 font-semibold">
+                        Erişilebilir
+                      </span>
                     ) : (
                       <span className="text-slate-400">Standart</span>
                     )}
