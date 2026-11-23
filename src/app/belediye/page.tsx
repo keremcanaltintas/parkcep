@@ -46,6 +46,15 @@ function BelediyePanelContent() {
   const [selectedLotFilter, setSelectedLotFilter] = useState<string>("hepsi");
   const [selectedDayFilter, setSelectedDayFilter] = useState<string>("bugun");
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+  const [selectedKpi, setSelectedKpi] = useState<
+    | "doluluk"
+    | "rezervasyon"
+    | "tamamlanan"
+    | "ortalama"
+    | "hasilat"
+    | "enerji"
+    | null
+  >(null);
 
   const todayStr = currentDemoTime.toISOString().slice(0, 10);
   const currentMonthStr = currentDemoTime.toISOString().slice(0, 7);
@@ -118,6 +127,54 @@ function BelediyePanelContent() {
   }, [
     reservations,
     selectedLotFilter,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
+
+  const periodReservations = useMemo(() => {
+    return reservations.filter((r) => {
+      if (selectedLotFilter !== "hepsi" && r.lot_id !== selectedLotFilter)
+        return false;
+      const resDate = r.olusturulma.slice(0, 10);
+      const resTime = new Date(r.olusturulma).getTime();
+      if (selectedDayFilter === "bugun") return resDate === todayStr;
+      if (selectedDayFilter === "son7gun") return resTime >= sevenDaysAgoTime;
+      if (selectedDayFilter === "buay")
+        return resDate.slice(0, 7) === currentMonthStr;
+      return true;
+    });
+  }, [
+    reservations,
+    selectedLotFilter,
+    selectedDayFilter,
+    todayStr,
+    currentMonthStr,
+    sevenDaysAgoTime,
+  ]);
+
+  const periodChargeSessions = useMemo(() => {
+    const activeLotIds = new Set(activeLots.map((l) => l.id));
+    return chargeSessions.filter((cs) => {
+      const charger = chargers.find((c) => c.id === cs.charger_id);
+      if (!charger) return false;
+      const space = spaces.find((s) => s.id === charger.space_id);
+      if (!space || !activeLotIds.has(space.lot_id)) return false;
+      const sessionDate = cs.baslangic.slice(0, 10);
+      const sessionTime = new Date(cs.baslangic).getTime();
+      if (selectedDayFilter === "bugun") return sessionDate === todayStr;
+      if (selectedDayFilter === "son7gun")
+        return sessionTime >= sevenDaysAgoTime;
+      if (selectedDayFilter === "buay")
+        return sessionDate.slice(0, 7) === currentMonthStr;
+      return true;
+    });
+  }, [
+    chargeSessions,
+    chargers,
+    spaces,
+    activeLots,
     selectedDayFilter,
     todayStr,
     currentMonthStr,
@@ -346,93 +403,213 @@ function BelediyePanelContent() {
               <option value="tumu">Tüm Kayıtlar</option>
             </select>
           </div>
+
+          {/* KPI Seçim Dropdown'u */}
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-xs font-bold text-slate-600 shrink-0">
+              KPI:
+            </span>
+            <select
+              value={selectedKpi || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (
+                  value === "doluluk" ||
+                  value === "rezervasyon" ||
+                  value === "tamamlanan" ||
+                  value === "ortalama" ||
+                  value === "hasilat" ||
+                  value === "enerji"
+                ) {
+                  setSelectedKpi(value);
+                } else {
+                  setSelectedKpi(null);
+                }
+              }}
+              aria-label="KPI seçimi"
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden w-full min-h-[38px]"
+            >
+              <option value="">Tümü</option>
+              <option value="doluluk">Doluluk Oranı</option>
+              <option value="rezervasyon">Rezervasyon Sayısı</option>
+              <option value="tamamlanan">Tamamlanan Ziyaret</option>
+              <option value="ortalama">Ortalama Kalış Süresi</option>
+              <option value="hasilat">Toplam Hasılat</option>
+              <option value="enerji">Enerji Tüketimi</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* BELEDİYE METRİKLERİ KARTLARI (6 Kart) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "doluluk" ? null : "doluluk")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "doluluk" ? "border-teal-500 ring-2 ring-teal-100" : "border-slate-200 hover:border-teal-300"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Şehir Doluluğu</span>
             <Building2 className="w-4 h-4 text-teal-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-            %{overallOccupancyPercent}
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">
-            {totalPhysicalInside} araç / {totalOpenSpaces} açık
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">%{overallOccupancyPercent}</div>
+          <span className="text-[10px] text-slate-500 block truncate">{totalPhysicalInside} araç / {totalOpenSpaces} açık</span>
+        </button>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "rezervasyon" ? null : "rezervasyon")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "rezervasyon" ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200 hover:border-blue-300"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Rezervasyon</span>
             <BarChart3 className="w-4 h-4 text-blue-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-            {createdReservationsCount}
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">
-            Kayıtlı rezervasyon
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">{createdReservationsCount}</div>
+          <span className="text-[10px] text-slate-500 block truncate">Kayıtlı rezervasyon</span>
+        </button>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "tamamlanan" ? null : "tamamlanan")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "tamamlanan" ? "border-emerald-500 ring-2 ring-emerald-100" : "border-slate-200 hover:border-emerald-300"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Tamamlanan</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">
-            {completedVisits.length}
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">
-            Giriş & çıkış yapılmış
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">{completedVisits.length}</div>
+          <span className="text-[10px] text-slate-500 block truncate">Giriş & çıkış yapılmış</span>
+        </button>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "ortalama" ? null : "ortalama")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "ortalama" ? "border-amber-500 ring-2 ring-amber-100" : "border-slate-200 hover:border-amber-300"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate">Ortalama Park</span>
             <Clock className="w-4 h-4 text-amber-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-            {averageDurationMinutes > 0
-              ? `${averageDurationMinutes} dk`
-              : "0 dk"}
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">
-            {averageDurationMinutes > 0
-              ? `(~${(averageDurationMinutes / 60).toFixed(1)} sa)`
-              : "Ziyaret yok"}
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">{averageDurationMinutes > 0 ? `${averageDurationMinutes} dk` : "0 dk"}</div>
+          <span className="text-[10px] text-slate-500 block truncate">{averageDurationMinutes > 0 ? `(~${(averageDurationMinutes / 60).toFixed(1)} sa)` : "Ziyaret yok"}</span>
+        </button>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "hasilat" ? null : "hasilat")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "hasilat" ? "border-emerald-500 ring-2 ring-emerald-100" : "border-emerald-200 bg-emerald-50/20 hover:border-emerald-400"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate text-emerald-800">Toplam Hasılat</span>
             <DollarSign className="w-4 h-4 text-emerald-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
-            {formatKurusToTL(periodTotalRevenueKurus)}
-          </div>
-          <span className="text-[10px] text-emerald-800 block truncate font-medium">
-            Park & şarj geliri
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">{formatKurusToTL(periodTotalRevenueKurus)}</div>
+          <span className="text-[10px] text-emerald-800 block truncate font-medium">Park & şarj geliri</span>
+        </button>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-teal-200 bg-teal-50/20 shadow-2xs space-y-1">
+        <button
+          type="button"
+          onClick={() => setSelectedKpi(selectedKpi === "enerji" ? null : "enerji")}
+          className={`text-left bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border shadow-2xs space-y-1 cursor-pointer transition-all ${selectedKpi === "enerji" ? "border-teal-500 ring-2 ring-teal-100" : "border-teal-200 bg-teal-50/20 hover:border-teal-400"}`}
+        >
           <div className="flex items-center justify-between text-slate-500 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <span className="truncate text-teal-800">Yeşil Enerji</span>
             <Zap className="w-4 h-4 text-teal-600 shrink-0" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-teal-800 mt-0.5">
-            {periodTotalEnergyKwh.toFixed(1)} kWh
-          </div>
-          <span className="text-[10px] text-teal-800 block truncate font-medium">
-            Dağıtılan EV şarjı
-          </span>
-        </div>
+          <div className="text-xl sm:text-2xl font-black text-teal-800 mt-0.5">{periodTotalEnergyKwh.toFixed(1)} kWh</div>
+          <span className="text-[10px] text-teal-800 block truncate font-medium">Dağıtılan EV şarjı</span>
+        </button>
       </div>
+
+      {/* KPI DETAY PANELİ */}
+      {selectedKpi && (
+        <div className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="font-bold text-sm sm:text-base text-slate-900">
+                {selectedKpi === "doluluk" && "Şehir Doluluğu Detayı"}
+                {selectedKpi === "rezervasyon" && "Rezervasyon Detayı"}
+                {selectedKpi === "tamamlanan" && "Tamamlanan Ziyaret Detayı"}
+                {selectedKpi === "ortalama" && "Ortalama Park Süresi Detayı"}
+                {selectedKpi === "hasilat" && "Hasılat Detayı"}
+                {selectedKpi === "enerji" && "Şarj Enerji Detayı"}
+              </h2>
+              <p className="text-[11px] text-slate-500">Seçili tesis ve dönem için gerçek sistem verileri</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedKpi(null)}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50"
+            >
+              Kapat
+            </button>
+          </div>
+
+          {selectedKpi === "doluluk" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {activeLots.map((lot) => {
+                const summary = lotSummaries[lot.id];
+                return (
+                  <div key={lot.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <p className="font-bold text-xs text-slate-900">{lot.ad}</p>
+                    <p className="text-lg font-black text-teal-700 mt-1">{summary?.doluluk_yuzdesi === "Hizmet dışı" ? "Hizmet dışı" : `%${summary?.doluluk_yuzdesi || 0}`}</p>
+                    <p className="text-[11px] text-slate-500">{summary?.fiziksel_dolu_yer || 0} dolu / {summary?.toplam_yer || 0} toplam</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {(selectedKpi === "rezervasyon" || selectedKpi === "tamamlanan" || selectedKpi === "ortalama") && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[620px]">
+                <thead><tr className="border-b border-slate-200 text-slate-500"><th className="py-2 px-2">Tarih</th><th className="py-2 px-2">Tesis</th><th className="py-2 px-2">Durum</th><th className="py-2 px-2">Kalış</th></tr></thead>
+                <tbody>
+                  {(selectedKpi === "rezervasyon" ? periodReservations : completedVisits.map((v) => reservations.find((r) => r.id === v.id)).filter((r) => r !== undefined)).map((r, index) => {
+                    const lot = lots.find((item) => item.id === r.lot_id);
+                    const start = new Date(r.giris || r.baslangic).getTime();
+                    const end = new Date(r.cikis || r.bitis).getTime();
+                    const duration = Math.max(0, Math.round((end - start) / 60000));
+                    return (
+                      <tr key={r.id || index} className="border-b border-slate-100">
+                        <td className="py-2 px-2 whitespace-nowrap">{(r.cikis || r.olusturulma).slice(0, 10)}</td>
+                        <td className="py-2 px-2">{lot?.ad || "-"}</td>
+                        <td className="py-2 px-2 font-semibold">{r.durum}</td>
+                        <td className="py-2 px-2">{duration} dk</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {selectedKpi === "hasilat" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200"><p className="text-[11px] text-slate-500">Toplam Hasılat</p><p className="font-black text-slate-900">{formatKurusToTL(periodTotalRevenueKurus)}</p></div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200"><p className="text-[11px] text-slate-500">Gelirli Rezervasyon</p><p className="font-black text-slate-900">{periodReservations.filter((r) => r.durum === "TAMAMLANDI" || r.durum === "İÇERİDE").length} kayıt</p></div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200"><p className="text-[11px] text-slate-500">Şarj Oturumu</p><p className="font-black text-slate-900">{periodChargeSessions.length} oturum</p></div>
+            </div>
+          )}
+
+          {selectedKpi === "enerji" && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {periodChargeSessions.map((session) => {
+                const charger = chargers.find((item) => item.id === session.charger_id);
+                const reservation = reservations.find((item) => item.id === session.reservation_id);
+                return (
+                  <div key={session.id} className="p-3 rounded-xl bg-teal-50 border border-teal-200">
+                    <p className="text-[11px] text-teal-700">{charger?.soket_tipi || "Soket"}</p>
+                    <p className="font-black text-teal-900">{session.enerji_kWh.toFixed(2)} kWh</p>
+                    <p className="text-[11px] text-slate-500">{reservation?.plaka || "Plaka bilgisi yok"}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* TESİS BAZLI DOLULUK ÇUBUKLARI */}
       <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xs space-y-4">
