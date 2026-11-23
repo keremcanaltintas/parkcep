@@ -19,7 +19,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   ShieldCheck,
-  ChevronLeft
+  ChevronLeft,
+  MapPin,
+  Check,
+  RefreshCw
 } from 'lucide-react';
 
 function YeniRezervasyonForm() {
@@ -27,14 +30,17 @@ function YeniRezervasyonForm() {
   const searchParams = useSearchParams();
   const preselectedLot = searchParams.get('lot') || 'merkez';
   const preselectedTur = (searchParams.get('tur') as SpaceType) || 'standart';
+  const preselectedStartOffset = Number(searchParams.get('startOffset')) || 0;
+  const preselectedDuration = Number(searchParams.get('duration')) || 120;
 
-  const { lots, spaces, chargers, createReservation, currentDemoTime, currentUser } = useStore();
+  const { lots, spaces, chargers, createReservation, currentDemoTime, currentUser, lotSummaries } = useStore();
 
   const [selectedLotId, setSelectedLotId] = useState<string>(preselectedLot);
+  const [showAllLots, setShowAllLots] = useState<boolean>(false);
   const [selectedTur, setSelectedTur] = useState<SpaceType>(preselectedTur);
   const [selectedSocket, setSelectedSocket] = useState<SocketType>('CCS2');
-  const [startOffsetMinutes, setStartOffsetMinutes] = useState<number>(0);
-  const [durationMinutes, setDurationMinutes] = useState<number>(120);
+  const [startOffsetMinutes, setStartOffsetMinutes] = useState<number>(preselectedStartOffset);
+  const [durationMinutes, setDurationMinutes] = useState<number>(preselectedDuration);
   const [plaka, setPlaka] = useState<string>('34 PC 101');
   const [erisilebilirBeyan, setErisilebilirBeyan] = useState<boolean>(false);
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
@@ -185,38 +191,113 @@ function YeniRezervasyonForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-2xs space-y-4 sm:space-y-5">
-        {/* 1. Tesis Seçimi */}
+        {/* 1. Tesis Seçimi (Sadece Haritada Seçilen Otopark Gözükür) */}
         <div>
-          <label className="block text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-            1. Otopark Tesisi Seçimi
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
-            {lots.map((lot) => {
-              const isSelected = selectedLotId === lot.id;
-              return (
-                <button
-                  type="button"
-                  key={lot.id}
-                  onClick={() => {
-                    setSelectedLotId(lot.id);
-                    if (lot.id === 'kampus') setSelectedSocket('Type 2');
-                    else setSelectedSocket('CCS2');
-                  }}
-                  className={`p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[64px] ${
-                    isSelected
-                      ? 'border-teal-500 bg-teal-50/50 ring-2 ring-teal-500/20 text-slate-900'
-                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  <div className="text-xs font-bold truncate">{lot.ad.replace('ParkCep ', '')}</div>
-                  <div className="text-[10px] sm:text-[11px] text-teal-700 mt-0.5 truncate">{lot.ornek_bolge}</div>
-                  <div className="text-xs font-extrabold text-slate-900 mt-1.5">
-                    {formatKurusToTL(lot.saatlik_ucret_kurus)} <span className="text-[10px] text-slate-500 font-normal">/saat</span>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider">
+              1. Seçilen Otopark Tesisi
+            </label>
+            {!showAllLots ? (
+              <button
+                type="button"
+                onClick={() => setShowAllLots(true)}
+                className="text-[11px] sm:text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline inline-flex items-center gap-1 cursor-pointer transition-colors"
+                title="Başka bir otopark seçmek için tıklayın"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Tesisi Değiştir</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAllLots(false)}
+                className="text-[11px] sm:text-xs font-semibold text-slate-600 hover:text-slate-900 hover:underline inline-flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <span>Vazgeç / Seçiliyi Koru</span>
+              </button>
+            )}
           </div>
+
+          {!showAllLots ? (
+            /* Yalnızca seçilen otoparkın odaklanmış bilgi kartı */
+            selectedLot && (
+              <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-teal-500 bg-teal-50/40 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in-50 duration-200">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] sm:text-[11px] font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                      <span>Haritada Seçilen İstasyon</span>
+                    </span>
+                    {selectedLot.toplu_tasima_etiketi && (
+                      <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                        Toplu Taşıma Entegre
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                    {selectedLot.ad}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+                    <span className="flex items-center gap-1 text-teal-800 font-semibold">
+                      <MapPin className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <span>{selectedLot.ornek_bolge}</span>
+                    </span>
+                    <span>•</span>
+                    <span>{selectedLot.calisma_saatleri}</span>
+                    {lotSummaries[selectedLot.id] && (
+                      <>
+                        <span>•</span>
+                        <span className="font-semibold text-emerald-700">
+                          {lotSummaries[selectedLot.id].fiziksel_bos_yer} Boş Yer (Anlık)
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2.5 sm:pt-0 border-teal-200/60 shrink-0">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium">Saatlik Tarife</span>
+                  <div className="text-base sm:text-lg font-black text-slate-900">
+                    {formatKurusToTL(selectedLot.saatlik_ucret_kurus)}
+                    <span className="text-[11px] font-normal text-slate-500"> /saat</span>
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            /* Kullanıcı 'Tesisi Değiştir' dediğinde açılan seçim alanı */
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5 animate-in fade-in-50 duration-200">
+              {lots.map((lot) => {
+                const isSelected = selectedLotId === lot.id;
+                return (
+                  <button
+                    type="button"
+                    key={lot.id}
+                    onClick={() => {
+                      setSelectedLotId(lot.id);
+                      setShowAllLots(false);
+                    }}
+                    className={`p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[64px] ${
+                      isSelected
+                        ? 'border-teal-500 bg-teal-50/50 ring-2 ring-teal-500/20 text-slate-900'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="text-xs font-bold truncate">{lot.ad.replace('ParkCep ', '')}</div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-teal-700 mt-0.5 truncate">{lot.ornek_bolge}</div>
+                    <div className="text-xs font-extrabold text-slate-900 mt-1.5">
+                      {formatKurusToTL(lot.saatlik_ucret_kurus)} <span className="text-[10px] text-slate-500 font-normal">/saat</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* 2. Park Türü Seçimi */}
