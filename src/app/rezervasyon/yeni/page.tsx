@@ -47,9 +47,18 @@ function YeniRezervasyonForm() {
 
   const availableSockets = useMemo(() => {
     if (!selectedLot) return [];
-    if (selectedLot.id === 'kampus') return ['Type 2'] as SocketType[];
-    return ['CCS2'] as SocketType[];
-  }, [selectedLot]);
+    const lotSpaces = spaces.filter(s => s.lot_id === selectedLot.id && s.tur === 'sarjli');
+    const lotSpaceIds = new Set(lotSpaces.map(s => s.id));
+    const lotChargers = chargers.filter(c => lotSpaceIds.has(c.space_id));
+    const sockets = Array.from(new Set(lotChargers.map(c => c.soket_tipi)));
+    return sockets.length > 0 ? sockets : (['CCS2', 'Type 2'] as SocketType[]);
+  }, [selectedLot, spaces, chargers]);
+
+  React.useEffect(() => {
+    if (availableSockets.length > 0 && !availableSockets.includes(selectedSocket)) {
+      setSelectedSocket(availableSockets[0]);
+    }
+  }, [availableSockets, selectedSocket]);
 
   const calculatedStart = useMemo(() => {
     return new Date(currentDemoTime.getTime() + startOffsetMinutes * 60 * 1000);

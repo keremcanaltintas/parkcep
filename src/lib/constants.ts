@@ -15,7 +15,7 @@ export const INITIAL_PARKING_LOTS: ParkingLot[] = [
   {
     id: 'kampus',
     ad: 'ParkCep Kampüs Otoparkı',
-    ornek_bolge: 'Beşiktaş / Üniversite',
+    ornek_bolge: 'Beşiktaş / Meydan & Üniversite',
     lat: 41.0428,
     lng: 29.0077,
     saatlik_ucret_kurus: 3000, // 30 TL / saat
@@ -31,32 +31,78 @@ export const INITIAL_PARKING_LOTS: ParkingLot[] = [
     lng: 29.0152,
     saatlik_ucret_kurus: 2500, // 25 TL / saat
     veri_zamani: 'Az önce güncellendi',
-    toplu_tasima_etiketi: 'Toplu taşımaya yakın • örnek',
+    toplu_tasima_etiketi: 'Marmaray & Metro Entegre',
     calisma_saatleri: '24 Saat Açık',
-    aciklama: 'Marmaray, metro ve metrobüs aktarma aksında yer alan, Park & Ride entegrasyonuna uygun ekonomik tesis.'
+    aciklama: 'Marmaray ve metro aktarma aksında yer alan, Park & Ride entegrasyonuna uygun ekonomik tesis.'
+  },
+  {
+    id: 'sisli',
+    ad: 'ParkCep Şişli Plaza Otoparkı',
+    ornek_bolge: 'Şişli / Mecidiyeköy',
+    lat: 41.0635,
+    lng: 28.9925,
+    saatlik_ucret_kurus: 4500, // 45 TL / saat
+    veri_zamani: '3 dk önce güncellendi',
+    toplu_tasima_etiketi: 'Metrobüs & M2 Yakını',
+    calisma_saatleri: '24 Saat Açık',
+    aciklama: 'İş merkezleri, metro ve metrobüs aktarma hattında 150 kW Ultra DC hızlı şarj üniteli kapalı tesis.'
+  },
+  {
+    id: 'atasehir',
+    ad: 'ParkCep Finans Merkezi Otoparkı',
+    ornek_bolge: 'Ataşehir / Finans Merkezi',
+    lat: 40.9982,
+    lng: 29.1158,
+    saatlik_ucret_kurus: 3500, // 35 TL / saat
+    veri_zamani: '1 dk önce güncellendi',
+    toplu_tasima_etiketi: 'M12 Metro Bağlantılı',
+    calisma_saatleri: '24 Saat Açık',
+    aciklama: 'İstanbul Uluslararası Finans Merkezi kalbinde 180 kW DC yüksek güç şarj ve geniş erişilebilir alanlar.'
+  },
+  {
+    id: 'bakirkoy',
+    ad: 'ParkCep Sahil Otoparkı',
+    ornek_bolge: 'Bakırköy / Sahil & Meydan',
+    lat: 40.9775,
+    lng: 28.8712,
+    saatlik_ucret_kurus: 3000, // 30 TL / saat
+    veri_zamani: '2 dk önce güncellendi',
+    toplu_tasima_etiketi: 'Marmaray 3 Dk',
+    calisma_saatleri: '24 Saat Açık',
+    aciklama: 'Bakırköy Özgürlük Meydanı ve sahil yolu kesişiminde 90 kW DC hızlı şarj donanımlı sahil tesisi.'
+  },
+  {
+    id: 'beyoglu',
+    ad: 'ParkCep Taksim Kültür Otoparkı',
+    ornek_bolge: 'Beyoğlu / Taksim & Galata',
+    lat: 41.0345,
+    lng: 28.9805,
+    saatlik_ucret_kurus: 5000, // 50 TL / saat
+    veri_zamani: 'Az önce güncellendi',
+    toplu_tasima_etiketi: 'M2 Taksim 2 Dk',
+    calisma_saatleri: '24 Saat Açık',
+    aciklama: 'İstiklal Caddesi ve Taksim Meydanı yürüme mesafesinde AC Type 2 şarj istasyonlu merkezi otopark.'
   }
 ];
 
-// Toplam 30 Park Yeri: 12 Merkez + 10 Kampüs + 8 Aktarma
-// 1 standart yer kapalı: merkez-s8
 export const INITIAL_SPACES: Space[] = [
-  // --- Merkez Otoparkı (12 yer = 8 standart + 2 erişilebilir + 2 şarjlı) ---
-  { id: 'merkez-s1', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S01' }, // İÇERİDE (34 PC 101)
-  { id: 'merkez-s2', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S02' }, // İÇERİDE (34 BJK 1903)
+  // --- 1. Merkez Otoparkı (12 yer = 8 standart + 2 erişilebilir + 2 şarjlı) ---
+  { id: 'merkez-s1', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S01' },
+  { id: 'merkez-s2', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S02' },
   { id: 'merkez-s3', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S03' },
   { id: 'merkez-s4', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S04' },
   { id: 'merkez-s5', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S05' },
   { id: 'merkez-s6', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S06' },
   { id: 'merkez-s7', lot_id: 'merkez', tur: 'standart', kapali_mi: false, kod: 'M-S07' },
-  { id: 'merkez-s8', lot_id: 'merkez', tur: 'standart', kapali_mi: true, kod: 'M-S08' }, // 1 KAPALI YER (Bakım)
+  { id: 'merkez-s8', lot_id: 'merkez', tur: 'standart', kapali_mi: true, kod: 'M-S08' }, // 1 Kapalı
   { id: 'merkez-e1', lot_id: 'merkez', tur: 'erisilebilir', kapali_mi: false, kod: 'M-E01' },
   { id: 'merkez-e2', lot_id: 'merkez', tur: 'erisilebilir', kapali_mi: false, kod: 'M-E02' },
-  { id: 'merkez-c1', lot_id: 'merkez', tur: 'sarjli', kapali_mi: false, kod: 'M-Ş01' }, // İÇERİDE & ŞARJDA (34 EV 888)
+  { id: 'merkez-c1', lot_id: 'merkez', tur: 'sarjli', kapali_mi: false, kod: 'M-Ş01' },
   { id: 'merkez-c2', lot_id: 'merkez', tur: 'sarjli', kapali_mi: false, kod: 'M-Ş02' },
 
-  // --- Kampüs Otoparkı (10 yer = 7 standart + 1 erişilebilir + 2 şarjlı) ---
-  { id: 'kampus-s1', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S01' }, // İÇERİDE (34 PC 202)
-  { id: 'kampus-s2', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S02' }, // İÇERİDE (34 IST 3434)
+  // --- 2. Kampüs Otoparkı (10 yer = 7 standart + 1 erişilebilir + 2 şarjlı) ---
+  { id: 'kampus-s1', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S01' },
+  { id: 'kampus-s2', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S02' },
   { id: 'kampus-s3', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S03' },
   { id: 'kampus-s4', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S04' },
   { id: 'kampus-s5', lot_id: 'kampus', tur: 'standart', kapali_mi: false, kod: 'K-S05' },
@@ -66,33 +112,95 @@ export const INITIAL_SPACES: Space[] = [
   { id: 'kampus-c1', lot_id: 'kampus', tur: 'sarjli', kapali_mi: false, kod: 'K-Ş01' },
   { id: 'kampus-c2', lot_id: 'kampus', tur: 'sarjli', kapali_mi: false, kod: 'K-Ş02' },
 
-  // --- Aktarma Otoparkı (8 yer = 5 standart + 1 erişilebilir + 2 şarjlı) ---
-  { id: 'aktarma-s1', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S01' }, // İÇERİDE (34 PC 303)
+  // --- 3. Aktarma Otoparkı (8 yer = 5 standart + 1 erişilebilir + 2 şarjlı) ---
+  { id: 'aktarma-s1', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S01' },
   { id: 'aktarma-s2', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S02' },
   { id: 'aktarma-s3', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S03' },
   { id: 'aktarma-s4', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S04' },
   { id: 'aktarma-s5', lot_id: 'aktarma', tur: 'standart', kapali_mi: false, kod: 'A-S05' },
   { id: 'aktarma-e1', lot_id: 'aktarma', tur: 'erisilebilir', kapali_mi: false, kod: 'A-E01' },
-  { id: 'aktarma-c1', lot_id: 'aktarma', tur: 'sarjli', kapali_mi: false, kod: 'A-Ş01' }, // İÇERİDE & ŞARJDA (34 TR 0606)
+  { id: 'aktarma-c1', lot_id: 'aktarma', tur: 'sarjli', kapali_mi: false, kod: 'A-Ş01' },
   { id: 'aktarma-c2', lot_id: 'aktarma', tur: 'sarjli', kapali_mi: false, kod: 'A-Ş02' },
+
+  // --- 4. Şişli Otoparkı (10 yer = 7 standart + 1 erişilebilir + 2 şarjlı) ---
+  { id: 'sisli-s1', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S01' },
+  { id: 'sisli-s2', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S02' },
+  { id: 'sisli-s3', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S03' },
+  { id: 'sisli-s4', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S04' },
+  { id: 'sisli-s5', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S05' },
+  { id: 'sisli-s6', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S06' },
+  { id: 'sisli-s7', lot_id: 'sisli', tur: 'standart', kapali_mi: false, kod: 'Ş-S07' },
+  { id: 'sisli-e1', lot_id: 'sisli', tur: 'erisilebilir', kapali_mi: false, kod: 'Ş-E01' },
+  { id: 'sisli-c1', lot_id: 'sisli', tur: 'sarjli', kapali_mi: false, kod: 'Ş-Ş01' },
+  { id: 'sisli-c2', lot_id: 'sisli', tur: 'sarjli', kapali_mi: false, kod: 'Ş-Ş02' },
+
+  // --- 5. Ataşehir Otoparkı (12 yer = 8 standart + 2 erişilebilir + 2 şarjlı) ---
+  { id: 'atasehir-s1', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S01' },
+  { id: 'atasehir-s2', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S02' },
+  { id: 'atasehir-s3', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S03' },
+  { id: 'atasehir-s4', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S04' },
+  { id: 'atasehir-s5', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S05' },
+  { id: 'atasehir-s6', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S06' },
+  { id: 'atasehir-s7', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S07' },
+  { id: 'atasehir-s8', lot_id: 'atasehir', tur: 'standart', kapali_mi: false, kod: 'F-S08' },
+  { id: 'atasehir-e1', lot_id: 'atasehir', tur: 'erisilebilir', kapali_mi: false, kod: 'F-E01' },
+  { id: 'atasehir-e2', lot_id: 'atasehir', tur: 'erisilebilir', kapali_mi: false, kod: 'F-E02' },
+  { id: 'atasehir-c1', lot_id: 'atasehir', tur: 'sarjli', kapali_mi: false, kod: 'F-Ş01' },
+  { id: 'atasehir-c2', lot_id: 'atasehir', tur: 'sarjli', kapali_mi: false, kod: 'F-Ş02' },
+
+  // --- 6. Bakırköy Otoparkı (10 yer = 7 standart + 1 erişilebilir + 2 şarjlı) ---
+  { id: 'bakirkoy-s1', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S01' },
+  { id: 'bakirkoy-s2', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S02' },
+  { id: 'bakirkoy-s3', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S03' },
+  { id: 'bakirkoy-s4', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S04' },
+  { id: 'bakirkoy-s5', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S05' },
+  { id: 'bakirkoy-s6', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S06' },
+  { id: 'bakirkoy-s7', lot_id: 'bakirkoy', tur: 'standart', kapali_mi: false, kod: 'B-S07' },
+  { id: 'bakirkoy-e1', lot_id: 'bakirkoy', tur: 'erisilebilir', kapali_mi: false, kod: 'B-E01' },
+  { id: 'bakirkoy-c1', lot_id: 'bakirkoy', tur: 'sarjli', kapali_mi: false, kod: 'B-Ş01' },
+  { id: 'bakirkoy-c2', lot_id: 'bakirkoy', tur: 'sarjli', kapali_mi: false, kod: 'B-Ş02' },
+
+  // --- 7. Beyoğlu Otoparkı (8 yer = 5 standart + 1 erişilebilir + 2 şarjlı) ---
+  { id: 'beyoglu-s1', lot_id: 'beyoglu', tur: 'standart', kapali_mi: false, kod: 'T-S01' },
+  { id: 'beyoglu-s2', lot_id: 'beyoglu', tur: 'standart', kapali_mi: false, kod: 'T-S02' },
+  { id: 'beyoglu-s3', lot_id: 'beyoglu', tur: 'standart', kapali_mi: false, kod: 'T-S03' },
+  { id: 'beyoglu-s4', lot_id: 'beyoglu', tur: 'standart', kapali_mi: false, kod: 'T-S04' },
+  { id: 'beyoglu-s5', lot_id: 'beyoglu', tur: 'standart', kapali_mi: false, kod: 'T-S05' },
+  { id: 'beyoglu-e1', lot_id: 'beyoglu', tur: 'erisilebilir', kapali_mi: false, kod: 'T-E01' },
+  { id: 'beyoglu-c1', lot_id: 'beyoglu', tur: 'sarjli', kapali_mi: false, kod: 'T-Ş01' },
+  { id: 'beyoglu-c2', lot_id: 'beyoglu', tur: 'sarjli', kapali_mi: false, kod: 'T-Ş02' },
 ];
 
-// Şarj Cihazları
 export const INITIAL_CHARGERS: Charger[] = [
-  // Merkez: CCS2 120 kW, 10 TL/kWh (1000 kurus)
+  // Merkez (Kadıköy): CCS2 120 kW, 10 TL/kWh
   { id: 'ch-merkez-1', space_id: 'merkez-c1', soket_tipi: 'CCS2', guc_kW: 120, durum: 'ŞARJ EDİYOR', kWh_bedeli_kurus: 1000 },
   { id: 'ch-merkez-2', space_id: 'merkez-c2', soket_tipi: 'CCS2', guc_kW: 120, durum: 'HAZIR', kWh_bedeli_kurus: 1000 },
 
-  // Kampüs: Type 2 22 kW, 8 TL/kWh (800 kurus)
+  // Kampüs (Beşiktaş): Type 2 22 kW AC, 8 TL/kWh
   { id: 'ch-kampus-1', space_id: 'kampus-c1', soket_tipi: 'Type 2', guc_kW: 22, durum: 'HAZIR', kWh_bedeli_kurus: 800 },
   { id: 'ch-kampus-2', space_id: 'kampus-c2', soket_tipi: 'Type 2', guc_kW: 22, durum: 'HAZIR', kWh_bedeli_kurus: 800 },
 
-  // Aktarma: CCS2 60 kW, 9 TL/kWh (900 kurus)
+  // Aktarma (Üsküdar): CCS2 60 kW DC, 9 TL/kWh
   { id: 'ch-aktarma-1', space_id: 'aktarma-c1', soket_tipi: 'CCS2', guc_kW: 60, durum: 'ŞARJ EDİYOR', kWh_bedeli_kurus: 900 },
   { id: 'ch-aktarma-2', space_id: 'aktarma-c2', soket_tipi: 'CCS2', guc_kW: 60, durum: 'HAZIR', kWh_bedeli_kurus: 900 },
+
+  // Şişli: CCS2 150 kW Ultra DC, 11 TL/kWh
+  { id: 'ch-sisli-1', space_id: 'sisli-c1', soket_tipi: 'CCS2', guc_kW: 150, durum: 'HAZIR', kWh_bedeli_kurus: 1100 },
+  { id: 'ch-sisli-2', space_id: 'sisli-c2', soket_tipi: 'CCS2', guc_kW: 150, durum: 'HAZIR', kWh_bedeli_kurus: 1100 },
+
+  // Ataşehir: CCS2 180 kW DC + Type 2 22 kW AC, 10 TL/kWh
+  { id: 'ch-atasehir-1', space_id: 'atasehir-c1', soket_tipi: 'CCS2', guc_kW: 180, durum: 'HAZIR', kWh_bedeli_kurus: 1050 },
+  { id: 'ch-atasehir-2', space_id: 'atasehir-c2', soket_tipi: 'Type 2', guc_kW: 22, durum: 'HAZIR', kWh_bedeli_kurus: 800 },
+
+  // Bakırköy: CCS2 90 kW DC, 9.5 TL/kWh
+  { id: 'ch-bakirkoy-1', space_id: 'bakirkoy-c1', soket_tipi: 'CCS2', guc_kW: 90, durum: 'HAZIR', kWh_bedeli_kurus: 950 },
+  { id: 'ch-bakirkoy-2', space_id: 'bakirkoy-c2', soket_tipi: 'CCS2', guc_kW: 90, durum: 'HAZIR', kWh_bedeli_kurus: 950 },
+
+  // Beyoğlu: Type 2 22 kW AC, 8.5 TL/kWh
+  { id: 'ch-beyoglu-1', space_id: 'beyoglu-c1', soket_tipi: 'Type 2', guc_kW: 22, durum: 'HAZIR', kWh_bedeli_kurus: 850 },
+  { id: 'ch-beyoglu-2', space_id: 'beyoglu-c2', soket_tipi: 'Type 2', guc_kW: 22, durum: 'HAZIR', kWh_bedeli_kurus: 850 },
 ];
 
-// Demo Kullanıcıları (Page 6)
 export const DEMO_USERS: User[] = [
   {
     id: 'user-surucu-1',
@@ -138,6 +246,15 @@ export const DEMO_USERS: User[] = [
     avatar: '👮‍♀️'
   },
   {
+    id: 'user-gorevli-sisli',
+    ad: 'Burak Şen',
+    email: 'sisli.gorevli@parkcep.com',
+    parola_hash: 'demo123',
+    rol: 'gorevli',
+    assigned_lot_id: 'sisli',
+    avatar: '👮‍♂️'
+  },
+  {
     id: 'user-belediye',
     ad: 'Ulaşım Daire Başkanlığı',
     email: 'belediye@ulasim.gov.tr',
@@ -157,17 +274,13 @@ export const DEMO_USERS: User[] = [
 
 export const STATIC_SEED_TIMESTAMP = 1795003200000;
 
-// Başlangıç Rezervasyonları ve Ziyaretleri üreten zengin yardımcı fonksiyon
 export function createInitialReservations(baseTime: Date = new Date()): Reservation[] {
   const now = baseTime.getTime();
   const ONE_HOUR = 3600 * 1000;
   const ONE_DAY = 24 * ONE_HOUR;
 
   const reservations: Reservation[] = [
-    // ==========================================
-    // 1. İÇERİDEKİ ARAÇLAR (Canlı Otopark Doluluğu)
-    // ==========================================
-    // Merkez Otoparkı - 3 araç içeride
+    // --- İçerideki Araçlar ---
     {
       id: 'res-active-1',
       kod: 'PC-10101',
@@ -212,14 +325,12 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       baslangic: new Date(now - 55 * 60 * 1000).toISOString(),
       bitis: new Date(now + 1 * ONE_HOUR).toISOString(),
       durum: 'İÇERİDE',
-      kaynak: 'gorevli', // walk-in
+      kaynak: 'gorevli',
       giris: new Date(now - 55 * 60 * 1000).toISOString(),
       saatlik_tarife_kurus: 4000,
       olusturulma: new Date(now - 55 * 60 * 1000).toISOString(),
       plaka: '34 BJK 1903'
     },
-
-    // Kampüs Otoparkı - 2 araç içeride
     {
       id: 'res-active-2',
       kod: 'PC-20202',
@@ -251,8 +362,6 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       olusturulma: new Date(now - 2 * ONE_HOUR).toISOString(),
       plaka: '34 IST 3434'
     },
-
-    // Aktarma Otoparkı - 2 araç içeride
     {
       id: 'res-active-3',
       kod: 'PC-30303',
@@ -289,10 +398,67 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       olusturulma: new Date(now - 3 * ONE_HOUR).toISOString(),
       plaka: '34 TR 0606'
     },
+    {
+      id: 'res-active-4',
+      kod: 'PC-40101',
+      space_id: 'sisli-s1',
+      lot_id: 'sisli',
+      baslangic: new Date(now - 40 * 60 * 1000).toISOString(),
+      bitis: new Date(now + 2 * ONE_HOUR).toISOString(),
+      durum: 'İÇERİDE',
+      kaynak: 'gorevli',
+      giris: new Date(now - 38 * 60 * 1000).toISOString(),
+      saatlik_tarife_kurus: 4500,
+      olusturulma: new Date(now - 40 * 60 * 1000).toISOString(),
+      plaka: '34 SIS 44'
+    },
+    {
+      id: 'res-active-5',
+      kod: 'PC-50101',
+      user_id: 'user-surucu-2',
+      user_ad: 'Ayşe Kaya',
+      user_email: 'ayse@parkcep.com',
+      space_id: 'atasehir-s1',
+      lot_id: 'atasehir',
+      baslangic: new Date(now - 20 * 60 * 1000).toISOString(),
+      bitis: new Date(now + 3 * ONE_HOUR).toISOString(),
+      durum: 'İÇERİDE',
+      kaynak: 'uygulama',
+      giris: new Date(now - 18 * 60 * 1000).toISOString(),
+      saatlik_tarife_kurus: 3500,
+      olusturulma: new Date(now - 1 * ONE_HOUR).toISOString(),
+      plaka: '34 FIN 01'
+    },
+    {
+      id: 'res-active-6',
+      kod: 'PC-60101',
+      space_id: 'bakirkoy-s1',
+      lot_id: 'bakirkoy',
+      baslangic: new Date(now - 1 * ONE_HOUR).toISOString(),
+      bitis: new Date(now + 1 * ONE_HOUR).toISOString(),
+      durum: 'İÇERİDE',
+      kaynak: 'uygulama',
+      giris: new Date(now - 55 * 60 * 1000).toISOString(),
+      saatlik_tarife_kurus: 3000,
+      olusturulma: new Date(now - 2 * ONE_HOUR).toISOString(),
+      plaka: '34 BAK 34'
+    },
+    {
+      id: 'res-active-7',
+      kod: 'PC-70101',
+      space_id: 'beyoglu-s1',
+      lot_id: 'beyoglu',
+      baslangic: new Date(now - 30 * 60 * 1000).toISOString(),
+      bitis: new Date(now + 2 * ONE_HOUR).toISOString(),
+      durum: 'İÇERİDE',
+      kaynak: 'gorevli',
+      giris: new Date(now - 28 * 60 * 1000).toISOString(),
+      saatlik_tarife_kurus: 5000,
+      olusturulma: new Date(now - 30 * 60 * 1000).toISOString(),
+      plaka: '34 TAK 99'
+    },
 
-    // ==========================================
-    // 2. BUGÜN VE GELECEKTE BEKLENEN ONAYLI REZERVASYONLAR
-    // ==========================================
+    // --- Onaylı Gelecek Rezervasyonlar ---
     {
       id: 'res-future-1',
       kod: 'PC-40401',
@@ -315,16 +481,16 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       user_id: 'user-surucu-2',
       user_ad: 'Ayşe Kaya',
       user_email: 'ayse@parkcep.com',
-      space_id: 'merkez-c2',
-      lot_id: 'merkez',
-      baslangic: new Date(now + 2.5 * ONE_HOUR).toISOString(),
-      bitis: new Date(now + 4.5 * ONE_HOUR).toISOString(),
+      space_id: 'sisli-c1',
+      lot_id: 'sisli',
+      baslangic: new Date(now + 1.5 * ONE_HOUR).toISOString(),
+      bitis: new Date(now + 3.5 * ONE_HOUR).toISOString(),
       durum: 'ONAYLI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      sarj_tarife_kurus: 1000,
+      saatlik_tarife_kurus: 4500,
+      sarj_tarife_kurus: 1100,
       soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 2 * ONE_HOUR).toISOString(),
+      olusturulma: new Date(now - 1 * ONE_HOUR).toISOString(),
       plaka: '34 EV 888'
     },
     {
@@ -333,10 +499,28 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       user_id: 'user-surucu-1',
       user_ad: 'Ahmet Yılmaz',
       user_email: 'ahmet@parkcep.com',
-      space_id: 'kampus-e1',
-      lot_id: 'kampus',
+      space_id: 'atasehir-c1',
+      lot_id: 'atasehir',
       baslangic: new Date(now + 2 * ONE_HOUR).toISOString(),
       bitis: new Date(now + 4 * ONE_HOUR).toISOString(),
+      durum: 'ONAYLI',
+      kaynak: 'uygulama',
+      saatlik_tarife_kurus: 3500,
+      sarj_tarife_kurus: 1050,
+      soket_tipi: 'CCS2',
+      olusturulma: new Date(now - 2 * ONE_HOUR).toISOString(),
+      plaka: '34 PC 101'
+    },
+    {
+      id: 'res-future-4',
+      kod: 'PC-40404',
+      user_id: 'user-surucu-2',
+      user_ad: 'Ayşe Kaya',
+      user_email: 'ayse@parkcep.com',
+      space_id: 'bakirkoy-e1',
+      lot_id: 'bakirkoy',
+      baslangic: new Date(now + 2.5 * ONE_HOUR).toISOString(),
+      bitis: new Date(now + 4.5 * ONE_HOUR).toISOString(),
       durum: 'ONAYLI',
       kaynak: 'uygulama',
       saatlik_tarife_kurus: 3000,
@@ -345,387 +529,122 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
       plaka: '34 ENG 01'
     },
     {
-      id: 'res-future-4',
-      kod: 'PC-40404',
-      user_id: 'user-surucu-2',
-      user_ad: 'Ayşe Kaya',
-      user_email: 'ayse@parkcep.com',
-      space_id: 'aktarma-c2',
-      lot_id: 'aktarma',
-      baslangic: new Date(now + 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now + 5 * ONE_HOUR).toISOString(),
-      durum: 'ONAYLI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      sarj_tarife_kurus: 900,
-      soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 4 * ONE_HOUR).toISOString(),
-      plaka: '34 EV 999'
-    },
-    {
       id: 'res-future-5',
       kod: 'PC-40405',
       user_id: 'user-surucu-1',
       user_ad: 'Ahmet Yılmaz',
       user_email: 'ahmet@parkcep.com',
-      space_id: 'merkez-s4',
-      lot_id: 'merkez',
-      baslangic: new Date(now + 1 * ONE_DAY).toISOString(),
-      bitis: new Date(now + 1 * ONE_DAY + 2 * ONE_HOUR).toISOString(),
+      space_id: 'beyoglu-c1',
+      lot_id: 'beyoglu',
+      baslangic: new Date(now + 3 * ONE_HOUR).toISOString(),
+      bitis: new Date(now + 5 * ONE_HOUR).toISOString(),
       durum: 'ONAYLI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      olusturulma: new Date(now - 2 * ONE_HOUR).toISOString(),
-      plaka: '34 PC 101'
-    },
-    {
-      id: 'res-future-6',
-      kod: 'PC-40406',
-      user_id: 'user-surucu-2',
-      user_ad: 'Ayşe Kaya',
-      user_email: 'ayse@parkcep.com',
-      space_id: 'kampus-c1',
-      lot_id: 'kampus',
-      baslangic: new Date(now + 1 * ONE_DAY + 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now + 1 * ONE_DAY + 5 * ONE_HOUR).toISOString(),
-      durum: 'ONAYLI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 3000,
-      sarj_tarife_kurus: 800,
+      saatlik_tarife_kurus: 5000,
+      sarj_tarife_kurus: 850,
       soket_tipi: 'Type 2',
       olusturulma: new Date(now - 3 * ONE_HOUR).toISOString(),
-      plaka: '34 EV 888'
-    },
-    {
-      id: 'res-future-7',
-      kod: 'PC-40407',
-      user_id: 'user-surucu-1',
-      user_ad: 'Ahmet Yılmaz',
-      user_email: 'ahmet@parkcep.com',
-      space_id: 'aktarma-s2',
-      lot_id: 'aktarma',
-      baslangic: new Date(now + 2 * ONE_DAY).toISOString(),
-      bitis: new Date(now + 2 * ONE_DAY + 4 * ONE_HOUR).toISOString(),
-      durum: 'ONAYLI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      olusturulma: new Date(now - 5 * ONE_HOUR).toISOString(),
-      plaka: '34 PC 101'
+      plaka: '34 EV 999'
     },
 
-    // ==========================================
-    // 3. TAMAMLANAN ZİYARETLER (Belediye ve Analitik Raporu İçin 24+ Zengin Kayıt)
-    // ==========================================
-    // Bugün tamamlananlar
+    // --- Geçmiş Tamamlanan Ziyaretler (Belediye Analitiği) ---
     {
-      id: 'res-comp-today-1',
+      id: 'res-comp-1',
       kod: 'PC-80101',
-      user_id: 'user-surucu-1',
-      space_id: 'merkez-s5',
-      lot_id: 'merkez',
+      space_id: 'sisli-s2',
+      lot_id: 'sisli',
       baslangic: new Date(now - 4 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 2 * ONE_HOUR).toISOString(),
       giris: new Date(now - 4 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 2.1 * ONE_HOUR).toISOString(),
       durum: 'TAMAMLANDI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      olusturulma: new Date(now - 6 * ONE_HOUR).toISOString(),
-      plaka: '34 ABC 12'
+      saatlik_tarife_kurus: 4500,
+      olusturulma: new Date(now - 6 * ONE_HOUR).toISOString()
     },
     {
-      id: 'res-comp-today-2',
+      id: 'res-comp-2',
       kod: 'PC-80102',
-      space_id: 'kampus-s3',
-      lot_id: 'kampus',
+      space_id: 'atasehir-s2',
+      lot_id: 'atasehir',
       baslangic: new Date(now - 5 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 3.5 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 5 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 3.5 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'gorevli',
-      saatlik_tarife_kurus: 3000,
-      olusturulma: new Date(now - 5 * ONE_HOUR).toISOString(),
-      plaka: '34 DEF 34'
-    },
-    {
-      id: 'res-comp-today-3',
-      kod: 'PC-80103',
-      space_id: 'aktarma-s3',
-      lot_id: 'aktarma',
-      baslangic: new Date(now - 6 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 3 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 5.9 * ONE_HOUR).toISOString(),
+      giris: new Date(now - 5 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 3 * ONE_HOUR).toISOString(),
       durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      olusturulma: new Date(now - 7 * ONE_HOUR).toISOString(),
-      plaka: '34 GHK 56'
-    },
-    {
-      id: 'res-comp-today-4',
-      kod: 'PC-80104',
-      space_id: 'merkez-c2',
-      lot_id: 'merkez',
-      baslangic: new Date(now - 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 1.5 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 3 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 1.5 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      sarj_tarife_kurus: 1000,
-      soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 4 * ONE_HOUR).toISOString(),
-      plaka: '34 TES 99'
-    },
-
-    // 1 gün önce
-    {
-      id: 'res-comp-d1-1',
-      kod: 'PC-70101',
-      space_id: 'merkez-s3',
-      lot_id: 'merkez',
-      baslangic: new Date(now - 1 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 1 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      olusturulma: new Date(now - 1.2 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d1-2',
-      kod: 'PC-70102',
-      space_id: 'kampus-e1',
-      lot_id: 'kampus',
-      baslangic: new Date(now - 1 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 1 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 1 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 1 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 3000,
-      erisilebilir_ihtiyac_beyani: true,
-      olusturulma: new Date(now - 1.5 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d1-3',
-      kod: 'PC-70103',
-      space_id: 'aktarma-s4',
-      lot_id: 'aktarma',
-      baslangic: new Date(now - 1 * ONE_DAY - 5 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 1 * ONE_DAY - 5 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
       kaynak: 'gorevli',
-      saatlik_tarife_kurus: 2500,
-      olusturulma: new Date(now - 1.2 * ONE_DAY).toISOString()
+      saatlik_tarife_kurus: 3500,
+      olusturulma: new Date(now - 5.5 * ONE_HOUR).toISOString()
     },
     {
-      id: 'res-comp-d1-4',
-      kod: 'PC-70104',
-      space_id: 'merkez-c1',
-      lot_id: 'merkez',
+      id: 'res-comp-3',
+      kod: 'PC-80103',
+      space_id: 'bakirkoy-s2',
+      lot_id: 'bakirkoy',
       baslangic: new Date(now - 1 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 1 * ONE_DAY).toISOString(),
       giris: new Date(now - 1 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 1 * ONE_DAY).toISOString(),
       durum: 'TAMAMLANDI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      sarj_tarife_kurus: 1000,
-      soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 1.3 * ONE_DAY).toISOString()
+      saatlik_tarife_kurus: 3000,
+      olusturulma: new Date(now - 1.2 * ONE_DAY).toISOString()
     },
-
-    // 2 gün önce
     {
-      id: 'res-comp-d2-1',
-      kod: 'PC-60101',
-      space_id: 'kampus-s4',
-      lot_id: 'kampus',
-      baslangic: new Date(now - 2 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 2 * ONE_DAY).toISOString(),
-      giris: new Date(now - 2 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 2 * ONE_DAY).toISOString(),
+      id: 'res-comp-4',
+      kod: 'PC-80104',
+      space_id: 'beyoglu-s2',
+      lot_id: 'beyoglu',
+      baslangic: new Date(now - 1 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
+      bitis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
+      giris: new Date(now - 1 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
+      cikis: new Date(now - 1 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
       durum: 'TAMAMLANDI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 3000,
-      olusturulma: new Date(now - 2.2 * ONE_DAY).toISOString()
+      saatlik_tarife_kurus: 5000,
+      olusturulma: new Date(now - 1.5 * ONE_DAY).toISOString()
     },
     {
-      id: 'res-comp-d2-2',
-      kod: 'PC-60102',
-      space_id: 'aktarma-c1',
-      lot_id: 'aktarma',
+      id: 'res-comp-5',
+      kod: 'PC-80105',
+      space_id: 'merkez-s3',
+      lot_id: 'merkez',
       baslangic: new Date(now - 2 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 2 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
       giris: new Date(now - 2 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 2 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
       durum: 'TAMAMLANDI',
       kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      sarj_tarife_kurus: 900,
-      soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 2.4 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d2-3',
-      kod: 'PC-60103',
-      space_id: 'merkez-s6',
-      lot_id: 'merkez',
-      baslangic: new Date(now - 2 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 2 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 2 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 2 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'gorevli',
       saatlik_tarife_kurus: 4000,
-      olusturulma: new Date(now - 2.5 * ONE_DAY).toISOString()
+      olusturulma: new Date(now - 2.2 * ONE_DAY).toISOString()
     },
-
-    // 3 gün önce
     {
-      id: 'res-comp-d3-1',
-      kod: 'PC-50101',
-      space_id: 'merkez-s7',
-      lot_id: 'merkez',
+      id: 'res-comp-6',
+      kod: 'PC-80106',
+      space_id: 'kampus-s3',
+      lot_id: 'kampus',
       baslangic: new Date(now - 3 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 3 * ONE_DAY).toISOString(),
       giris: new Date(now - 3 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 3 * ONE_DAY).toISOString(),
       durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
+      kaynak: 'gorevli',
+      saatlik_tarife_kurus: 3000,
       olusturulma: new Date(now - 3.2 * ONE_DAY).toISOString()
     },
     {
-      id: 'res-comp-d3-2',
-      kod: 'PC-50102',
-      space_id: 'kampus-c2',
-      lot_id: 'kampus',
-      baslangic: new Date(now - 3 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 3 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 3 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 3 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 3000,
-      sarj_tarife_kurus: 800,
-      soket_tipi: 'Type 2',
-      olusturulma: new Date(now - 3.4 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d3-3',
-      kod: 'PC-50103',
-      space_id: 'aktarma-s5',
+      id: 'res-comp-7',
+      kod: 'PC-80107',
+      space_id: 'aktarma-s2',
       lot_id: 'aktarma',
-      baslangic: new Date(now - 3 * ONE_DAY - 5 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 3 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 3 * ONE_DAY - 5 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 3 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      olusturulma: new Date(now - 3.5 * ONE_DAY).toISOString()
-    },
-
-    // 4 gün önce
-    {
-      id: 'res-comp-d4-1',
-      kod: 'PC-40101',
-      space_id: 'merkez-e2',
-      lot_id: 'merkez',
-      baslangic: new Date(now - 4 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 4 * ONE_DAY).toISOString(),
-      giris: new Date(now - 4 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 4 * ONE_DAY).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      erisilebilir_ihtiyac_beyani: true,
-      olusturulma: new Date(now - 4.3 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d4-2',
-      kod: 'PC-40102',
-      space_id: 'kampus-s5',
-      lot_id: 'kampus',
-      baslangic: new Date(now - 4 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
+      baslangic: new Date(now - 4 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
       bitis: new Date(now - 4 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 4 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
+      giris: new Date(now - 4 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
       cikis: new Date(now - 4 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
       durum: 'TAMAMLANDI',
-      kaynak: 'gorevli',
-      saatlik_tarife_kurus: 3000,
+      kaynak: 'uygulama',
+      saatlik_tarife_kurus: 2500,
       olusturulma: new Date(now - 4.5 * ONE_DAY).toISOString()
-    },
-
-    // 5 gün önce
-    {
-      id: 'res-comp-d5-1',
-      kod: 'PC-30101',
-      space_id: 'aktarma-e1',
-      lot_id: 'aktarma',
-      baslangic: new Date(now - 5 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 5 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 5 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 5 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      erisilebilir_ihtiyac_beyani: true,
-      olusturulma: new Date(now - 5.4 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d5-2',
-      kod: 'PC-30102',
-      space_id: 'merkez-s1',
-      lot_id: 'merkez',
-      baslangic: new Date(now - 5 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 5 * ONE_DAY).toISOString(),
-      giris: new Date(now - 5 * ONE_DAY - 2 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 5 * ONE_DAY).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 4000,
-      olusturulma: new Date(now - 5.2 * ONE_DAY).toISOString()
-    },
-
-    // 6 gün önce
-    {
-      id: 'res-comp-d6-1',
-      kod: 'PC-20101',
-      space_id: 'kampus-s6',
-      lot_id: 'kampus',
-      baslangic: new Date(now - 6 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 6 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 6 * ONE_DAY - 4 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 6 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 3000,
-      olusturulma: new Date(now - 6.3 * ONE_DAY).toISOString()
-    },
-    {
-      id: 'res-comp-d6-2',
-      kod: 'PC-20102',
-      space_id: 'aktarma-c2',
-      lot_id: 'aktarma',
-      baslangic: new Date(now - 6 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      bitis: new Date(now - 6 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      giris: new Date(now - 6 * ONE_DAY - 3 * ONE_HOUR).toISOString(),
-      cikis: new Date(now - 6 * ONE_DAY - 1 * ONE_HOUR).toISOString(),
-      durum: 'TAMAMLANDI',
-      kaynak: 'uygulama',
-      saatlik_tarife_kurus: 2500,
-      sarj_tarife_kurus: 900,
-      soket_tipi: 'CCS2',
-      olusturulma: new Date(now - 6.5 * ONE_DAY).toISOString()
     }
   ];
 
@@ -733,7 +652,6 @@ export function createInitialReservations(baseTime: Date = new Date()): Reservat
 }
 
 export const INITIAL_CHARGE_SESSIONS: ChargeSession[] = [
-  // 2 Aktif Şarj Oturumu (Merkez ve Aktarma)
   {
     id: 'cs-active-1',
     reservation_id: 'res-active-1b',
@@ -752,45 +670,14 @@ export const INITIAL_CHARGE_SESSIONS: ChargeSession[] = [
     birim_fiyat_kurus: 900,
     aktif_mi: true
   },
-  // Tamamlanmış Şarj Oturumları
   {
     id: 'cs-comp-1',
-    reservation_id: 'res-comp-today-4',
-    charger_id: 'ch-merkez-2',
-    baslangic: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    bitis: new Date(Date.now() - 1.5 * 3600 * 1000).toISOString(),
-    enerji_kWh: 22.40,
-    birim_fiyat_kurus: 1000,
-    aktif_mi: false
-  },
-  {
-    id: 'cs-comp-2',
-    reservation_id: 'res-comp-d1-4',
-    charger_id: 'ch-merkez-1',
-    baslangic: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
-    bitis: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    enerji_kWh: 18.50,
-    birim_fiyat_kurus: 1000,
-    aktif_mi: false
-  },
-  {
-    id: 'cs-comp-3',
-    reservation_id: 'res-comp-d2-2',
-    charger_id: 'ch-aktarma-1',
-    baslangic: new Date(Date.now() - 51 * 3600 * 1000).toISOString(),
-    bitis: new Date(Date.now() - 49 * 3600 * 1000).toISOString(),
-    enerji_kWh: 15.20,
-    birim_fiyat_kurus: 900,
-    aktif_mi: false
-  },
-  {
-    id: 'cs-comp-4',
-    reservation_id: 'res-comp-d3-2',
-    charger_id: 'ch-kampus-2',
-    baslangic: new Date(Date.now() - 75 * 3600 * 1000).toISOString(),
-    bitis: new Date(Date.now() - 73 * 3600 * 1000).toISOString(),
-    enerji_kWh: 11.00,
-    birim_fiyat_kurus: 800,
+    reservation_id: 'res-comp-1',
+    charger_id: 'ch-sisli-1',
+    baslangic: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    bitis: new Date(Date.now() - 2.1 * 3600 * 1000).toISOString(),
+    enerji_kWh: 28.50,
+    birim_fiyat_kurus: 1100,
     aktif_mi: false
   }
 ];
@@ -816,38 +703,20 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   },
   {
     id: 'log-seed-3',
-    aktor: 'Mehmet Demir',
+    aktor: 'Burak Şen',
     rol: 'gorevli',
-    islem: 'REZERVASYONSUZ_GIRIS',
-    nesne: 'Plaka: 34 BJK 1903 (#PC-W1001)',
-    zaman: new Date(Date.now() - 55 * 60 * 1000).toISOString(),
-    detay: 'Merkez Otoparkı - Kapıdan doğrudan walk-in giriş kaydı yapıldı. Yer: M-S02.'
+    islem: 'GIRIS_YAPILDI',
+    nesne: 'Rezervasyon #PC-40101',
+    zaman: new Date(Date.now() - 38 * 60 * 1000).toISOString(),
+    detay: 'Şişli Plaza Otoparkı - 34 SIS 44 plakalı araç giriş yaptı.'
   },
   {
     id: 'log-seed-4',
-    aktor: 'Ali Can',
-    rol: 'gorevli',
-    islem: 'GIRIS_YAPILDI',
-    nesne: 'Rezervasyon #PC-20202',
-    zaman: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    detay: 'Kampüs Otoparkı - 34 PC 202 plakalı araç giriş onaylandı.'
-  },
-  {
-    id: 'log-seed-5',
-    aktor: 'Fatma Koç',
-    rol: 'gorevli',
-    islem: 'SARJ_BASLATILDI',
-    nesne: 'Şarj Ünitesi #ch-aktarma-1',
-    zaman: new Date(Date.now() - 48 * 60 * 1000).toISOString(),
-    detay: 'Aktarma Merkezi Otoparkı - 34 TR 0606 plakalı araç için 60 kW CCS2 şarj başlatıldı.'
-  },
-  {
-    id: 'log-seed-6',
     aktor: 'Sistem Yöneticisi',
     rol: 'demo_yoneticisi',
     islem: 'SISTEM_BASLATILDI',
-    nesne: '3 Tesis / 30 Park Yeri',
+    nesne: '7 Tesis / 68 Park Yeri',
     zaman: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    detay: 'ParkCep ekosistemi aktif edildi (30 toplam yer, 7 aktif araç, 1 kapalı alan).'
+    detay: 'ParkCep İstanbul pilot ağı aktif edildi (Kadıköy, Beşiktaş, Üsküdar, Şişli, Ataşehir, Bakırköy, Beyoğlu).'
   }
 ];

@@ -191,7 +191,7 @@ export default function KesfetPage() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 shrink-0" />
             <input
               type="text"
-              placeholder="Otopark veya bölge ara (Kadıköy, Beşiktaş, Üsküdar)..."
+              placeholder="Otopark veya ilçe ara (Kadıköy, Beşiktaş, Şişli, Bakırköy, Ataşehir)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-50/50 min-h-[40px]"
@@ -492,14 +492,30 @@ export default function KesfetPage() {
                   </div>
 
                   {/* Butonlar */}
-                  <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <Link
-                      href={`/otopark/${lot.id}`}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-slate-50 min-h-[36px]"
-                    >
-                      <span>Detayları İncele</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/otopark/${lot.id}`}
+                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-slate-50 min-h-[36px]"
+                      >
+                        <span>Detaylar</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedLotId(lot.id);
+                          setMobileTab('harita');
+                        }}
+                        className="md:hidden text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center gap-1 py-1.5 px-2 rounded-lg hover:bg-teal-50 min-h-[36px]"
+                        title="Haritada göster"
+                      >
+                        <Map className="w-3.5 h-3.5" />
+                        <span>Harita</span>
+                      </button>
+                    </div>
 
                     <Link
                       href={`/rezervasyon/yeni?lot=${lot.id}&startOffset=${startOffsetMinutes}&duration=${durationMinutes}&tur=${selectedType !== 'hepsi' ? selectedType : 'standart'}`}
